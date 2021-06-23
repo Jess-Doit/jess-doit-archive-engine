@@ -1,4 +1,5 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License: MIT](https://black.readthedocs.io/en/stable/_static/license.svg)](https://github.com/psf/black/blob/main/LICENSE)
 
 # Jess Doit's Archive Engine
 Automated tool to monitor your favorite pages. Ensure you never miss an upload.
