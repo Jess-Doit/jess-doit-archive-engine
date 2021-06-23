@@ -11,7 +11,9 @@ SoundCloud automatic backup.
 
 ## Setup config
 - Check out program settings in config/gen_config.ini
-- Edit list of urls. This is your backup list, everything here will have all media links downloaded
+- You can run the program without and changes here
+- Important to note the file config/url_list.ini
+- Edit this list of urls. This is your backup list, everything here will have all media links downloaded
 - Add one link per line. Can be any soundcloud page, playlist, album, likes page, etc...
 - Save and you are ready to start
 
