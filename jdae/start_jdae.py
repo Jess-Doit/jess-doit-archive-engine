@@ -39,9 +39,11 @@ class JDAE(object):
     NdNNNNNNNNNNNNmmdhhhdhhhhdddmmmNNNmNNNNNNNNNdysssso/-.......-::/++++++oooooooooo
     mdNNNNNNNNmmdddhhhhhddmNNNNNNNNNNNNNNNNNNNmmyyyys/-......-/+oooooooooooooooooooo
     NdNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNmdhyyhdms-......:+ossssssssssssssssssssss
+
+    soundcloud.com/jess-doit-223003857
     """
 
-
+    # Logger helper class
     class YTDLLogger(object):
         """
         Logger to print youtube_dl output
@@ -71,6 +73,11 @@ class JDAE(object):
             """
             print(f"Error: {msg}")
 
+    def __init__(self):
+        """
+        Constructor for JDAE
+        """
+        self.cm = ConfigManager()
 
     def my_hook(self, d):
         """
@@ -79,17 +86,15 @@ class JDAE(object):
         if d['status'] == 'finished':
             print('Done downloading, now converting ...')
 
-
-    def boot_sequence(self):
+    def boot_sequence(self, audio):
         """
         Prints title + logo, and plays startup audio
         """
         print()
         print(self.PRGM_TITLE)
         print(self.BOOT_LOGO)
-        playsound(self.AUDIO)
+        playsound(audio)
         print("\nStarting automated archive client")
-
 
     def download_from_url(self, ytdl, url):
         """
@@ -101,7 +106,6 @@ class JDAE(object):
             ytdl.download([url])
         except DownloadError:
             print(f"\nError occurred on page: {url}\n")
-
 
     def extract_info_url(self, ytdl, url):
         """
@@ -118,31 +122,38 @@ class JDAE(object):
         """
         # TODO: Add support for argparse
 
-        # TODO: Add ability to skip boot sequence
-        self.boot_sequence()
 
         # Options for youtube_dl instance
         ytdl_opts = {
             'format': 'bestaudio/best',
             'logger': self.YTDLLogger(),
-            'progress_hooks': [self.my_hook],
+            #'progress_hooks': [self.my_hook],
             'listformats' : True
         }
 
-        cm = ConfigManager()
-        url_list = cm.get_url_list()
 
+        # Read settings and urls from config files
+        url_list = self.cm.get_url_list()
+        audio = self.cm.get_boot_audio()
+
+        # TODO: Add ability to skip boot sequence
+        self.boot_sequence(audio)
+
+        # Print list of pages to user that will be processed
         print("\nMonitoring the following pages:")
         for url in url_list:
             print(f" - {url}")
 
+        # Time to get started
         print("\nEngine ready - good luck")
+        time.sleep(2)
         try:
             with youtube_dl.YoutubeDL(ytdl_opts) as ytdl:
                 # For every url in the url_list.ini run youtube_dl operation
                 for url in url_list:
+                    print(f"\n[URL] -- {url}\n")
                     # List all downloads available from url
-                    self.extract_info_url(ytdl, url)
+                    # self.extract_info_url(ytdl, url)
 
                     # Download all media from url
                     # self.download_from_url(ytdl, url)
