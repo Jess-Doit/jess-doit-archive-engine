@@ -1,3 +1,5 @@
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 # Jess Doit's Archive Engine
 Automated tool to monitor your favorite pages. Ensure you never miss an upload.
 SoundCloud automatic backup.

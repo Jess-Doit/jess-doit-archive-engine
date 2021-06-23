@@ -48,6 +48,7 @@ class JDAE(object):
         """
         Logger to print youtube_dl output
         """
+
         print_flag = False
 
         def debug(self, msg):
@@ -83,8 +84,8 @@ class JDAE(object):
         """
         Hook for finished downloads
         """
-        if d['status'] == 'finished':
-            print('Done downloading, now converting ...')
+        if d["status"] == "finished":
+            print("Done downloading, now converting ...")
 
     def boot_sequence(self, audio):
         """
@@ -122,13 +123,12 @@ class JDAE(object):
         """
         # TODO: Add support for argparse
 
-
         # Options for youtube_dl instance
         ytdl_opts = {
-            'format': 'bestaudio/best',
-            'logger': self.YTDLLogger(),
+            "format": "bestaudio/best",
+            "logger": self.YTDLLogger(),
             #'progress_hooks': [self.my_hook],
-            'listformats' : True
+            "listformats": True,
         }
 
         # Read settings and urls from config files

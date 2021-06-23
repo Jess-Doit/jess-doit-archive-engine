@@ -8,15 +8,12 @@ setup(
     description="Jess Doit's Archive Engine",
     url="https://github.com/Jess-Doit/jess-doit-archive-engine",
     packages=find_namespace_packages(),
-    install_requires=[
-        "youtube_dl",
-        "playsound"
-    ],
+    install_requires=["youtube_dl", "playsound"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.7",
-    include_package_data=True
+    include_package_data=True,
 )

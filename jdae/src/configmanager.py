@@ -1,10 +1,12 @@
 import configparser
 import importlib.resources as import_resources
 
+
 class ConfigManager(object):
     """
     Simplifies reading settings from user controlled config files
     """
+
     # Config file names
     GEN_CONFIG = "gen_config.ini"
     URL_CONFIG = "url_list.ini"
@@ -70,7 +72,7 @@ class ConfigManager(object):
         Returns full path to audio file named in general config
         """
         boot_audio_key = "boot_audio"
-        
+
         # Get file name from config
         audio_filename = self.parser[self.GC_SETTINGS][boot_audio_key]
 
