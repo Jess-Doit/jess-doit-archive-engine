@@ -82,4 +82,9 @@ class ConfigManager(object):
         """
         Returns skip intro bool value
         """
-        val = self.parser[self.GC_SETTINGS]
+        val = self.parser[self.GC_SETTINGS]["skip_intro"]
+
+        # Convert string to bool value
+        if val in ["True", "true"]:
+            return True
+        return False

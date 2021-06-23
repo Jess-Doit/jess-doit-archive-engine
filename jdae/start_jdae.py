@@ -131,13 +131,13 @@ class JDAE(object):
             'listformats' : True
         }
 
-
         # Read settings and urls from config files
         url_list = self.cm.get_url_list()
         audio = self.cm.get_boot_audio()
 
-        # TODO: Add ability to skip boot sequence
-        self.boot_sequence(audio)
+        # Print boot sequence and play audio
+        if not self.cm.get_skip_intro():
+            self.boot_sequence(audio)
 
         # Print list of pages to user that will be processed
         print("\nMonitoring the following pages:")
