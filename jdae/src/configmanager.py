@@ -13,6 +13,9 @@ class ConfigManager(object):
     AUDIO_RESOURCE = "jdae.sounds"
     CONFIG_RESOURCE = "jdae.config"
 
+    # General config sections
+    GC_SETTINGS = "SETTINGS"
+
     def __init__(self):
         """
         ConfigManager constructor
@@ -66,9 +69,17 @@ class ConfigManager(object):
         """
         Returns full path to audio file named in general config
         """
+        boot_audio_key = "boot_audio"
+        
         # Get file name from config
-        audio_filename = self.parser["SETTINGS"]["boot_audio"]
+        audio_filename = self.parser[self.GC_SETTINGS][boot_audio_key]
 
         # Resolve path and return
         audio_path = self._get_audio_path(audio_filename)
         return audio_path
+
+    def get_skip_intro(self):
+        """
+        Returns skip intro bool value
+        """
+        val = self.parser[self.GC_SETTINGS]
