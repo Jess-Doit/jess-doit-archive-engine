@@ -10,7 +10,14 @@ class ConfigManager(object):
         pass
 
     def get_url_list(self):
+        """
+        """
         return [
             "https://soundcloud.com/cr_label/sets/cr003-plata-last-dayz",
             "https://soundcloud.com/jess-doit-223003857/sets/natso-as"
         ]
+
+    def get_boot_audio(self):
+        """
+        """
+        return "./sounds/v1984_sound_studies-3.wav"
