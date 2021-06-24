@@ -90,3 +90,10 @@ class ConfigManager(object):
         if val in ["True", "true"]:
             return True
         return False
+
+    def get_output_dir(self):
+        """
+        Returns base directory for archive output
+        """
+        val = self.parser[self.GC_SETTINGS]["output_dir"]
+        return val

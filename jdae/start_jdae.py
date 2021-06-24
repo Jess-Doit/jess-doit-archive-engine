@@ -1,6 +1,7 @@
 # Standard imports
 import configparser
 import time
+import importlib.resources as import_resources
 
 # Package imports
 from jdae.src.configmanager import ConfigManager
@@ -11,9 +12,6 @@ from playsound import playsound
 
 
 class JDAE(object):
-    # Boot audio clip (v1984)
-    AUDIO = "./sounds/v1984_sound_studies-3.wav"
-
     # Title and logo
     PRGM_TITLE = "Jess' Archive Engine"
     BOOT_LOGO = """
@@ -42,6 +40,9 @@ class JDAE(object):
 
     soundcloud.com/jess-doit-223003857
     """
+
+    OUTPUT_DIR_RESOURCE = "jdae"
+    OUTPUT_FILE_TMPL = "%(title)s-%(id)s.%(ext)s"
 
     # Logger helper class
     class YTDLLogger(object):
@@ -123,17 +124,11 @@ class JDAE(object):
         """
         # TODO: Add support for argparse
 
-        # Options for youtube_dl instance
-        ytdl_opts = {
-            "format": "bestaudio/best",
-            "logger": self.YTDLLogger(),
-            #'progress_hooks': [self.my_hook],
-            "listformats": True,
-        }
 
         # Read settings and urls from config files
         url_list = self.cm.get_url_list()
         audio = self.cm.get_boot_audio()
+        output_dir = self.cm.get_output_dir()
 
         # Print boot sequence and play audio
         if not self.cm.get_skip_intro():
@@ -143,7 +138,18 @@ class JDAE(object):
         print("\nMonitoring the following pages:")
         for url in url_list:
             print(f" - {url}")
+        
+        # Construct output path template
+        outtmpl = f"{output_dir}/archive/%(playlist)s/{self.OUTPUT_FILE_TMPL}"
 
+        # Options for youtube_dl instance
+        ytdl_opts = {
+            "format": "bestaudio/best",
+            "logger": self.YTDLLogger(),
+            #'progress_hooks': [self.my_hook],
+            "outtmpl": outtmpl,
+            #"listformats": True,
+        }
         # Time to get started
         print("\nEngine ready - good luck")
         time.sleep(2)
@@ -156,7 +162,7 @@ class JDAE(object):
                     # self.extract_info_url(ytdl, url)
 
                     # Download all media from url
-                    # self.download_from_url(ytdl, url)
+                    self.download_from_url(ytdl, url)
         except:
             print(
                 "Archive engine has failed. Please try again."
