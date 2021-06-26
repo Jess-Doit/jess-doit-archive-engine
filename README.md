@@ -14,9 +14,12 @@ SoundCloud automatic backup.
 
 ## Setup config
 - Check out program settings in config/gen_config.ini
-- You can run the program without and changes here
+- Modify whatever you would like. Restore to defaults if somethings goes wrong.
+- You can run the program without and changes here. The default settings should work fine.
 - Important to note the file config/url_list.ini
-- Edit this list of urls. This is your backup list, everything here will have all media links downloaded
+- In this file place 1 url per line.
+- Change to whatever SoundCloud links you want the archive engine to monitor.
+- Edit this list of urls. This is your backup list, everything here will have all media links downloaded.
 - Add one link per line. Can be any soundcloud page, playlist, album, likes page, etc...
 - Save and you are ready to start
 
@@ -24,3 +27,5 @@ SoundCloud automatic backup.
 - Start a terminal/cmd prompt and cd to <repo_install_path>/jess-doit-archive-engine/jdae
 - Run the starter program
 - py -3 start_jdae.py
+- The program will print some info to the console and then start interating over the links on the pages set in url_list.ini
+- Kill the program with Ctrl+C in the window. It make take 2 in order to stop execution. (Fix this later)

@@ -41,7 +41,6 @@ class JDAE(object):
     soundcloud.com/jess-doit-223003857
     """
 
-    OUTPUT_DIR_RESOURCE = "jdae"
     OUTPUT_FILE_TMPL = "%(title)s-%(id)s.%(ext)s"
 
     # Logger helper class
@@ -124,11 +123,11 @@ class JDAE(object):
         """
         # TODO: Add support for argparse
 
-
         # Read settings and urls from config files
         url_list = self.cm.get_url_list()
         audio = self.cm.get_boot_audio()
         output_dir = self.cm.get_output_dir()
+        archive_wait_time = self.cm.get_archive_freq()
 
         # Print boot sequence and play audio
         if not self.cm.get_skip_intro():
@@ -138,9 +137,12 @@ class JDAE(object):
         print("\nMonitoring the following pages:")
         for url in url_list:
             print(f" - {url}")
-        
+
         # Construct output path template
         outtmpl = f"{output_dir}/archive/%(playlist)s/{self.OUTPUT_FILE_TMPL}"
+        print("\n######")
+        print(f"ARCHIVE OUTPUT DIRECTORY: {outtmpl}")
+        print("######")
 
         # Options for youtube_dl instance
         ytdl_opts = {
@@ -148,21 +150,27 @@ class JDAE(object):
             "logger": self.YTDLLogger(),
             #'progress_hooks': [self.my_hook],
             "outtmpl": outtmpl,
-            #"listformats": True,
+            # "listformats": True,
         }
         # Time to get started
         print("\nEngine ready - good luck")
-        time.sleep(2)
+        time.sleep(4)
         try:
             with youtube_dl.YoutubeDL(ytdl_opts) as ytdl:
-                # For every url in the url_list.ini run youtube_dl operation
-                for url in url_list:
-                    print(f"\n[URL] -- {url}\n")
-                    # List all downloads available from url
-                    # self.extract_info_url(ytdl, url)
+                while True:
+                    # For every url in the url_list.ini run youtube_dl operation
+                    for url in url_list:
+                        print(f"\n[URL] -- {url}\n")
+                        # List all downloads available from url
+                        # self.extract_info_url(ytdl, url)
 
-                    # Download all media from url
-                    self.download_from_url(ytdl, url)
+                        # Download all media from url
+                        self.download_from_url(ytdl, url)
+
+                    print(
+                        f"\nArchive pass completed. Will check again in {archive_wait_time}s ({archive_wait_time/3600}h)"
+                    )
+                    time.sleep(archive_wait_time)
         except:
             print(
                 "Archive engine has failed. Please try again."

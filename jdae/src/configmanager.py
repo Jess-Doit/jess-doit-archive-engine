@@ -7,6 +7,9 @@ class ConfigManager(object):
     Simplifies reading settings from user controlled config files
     """
 
+    # TODO: Sanatize all user input values. Must verify that things wont be
+    # broken or manipulated in unintended ways
+
     # Config file names
     GEN_CONFIG = "gen_config.ini"
     URL_CONFIG = "url_list.ini"
@@ -62,6 +65,7 @@ class ConfigManager(object):
             url_list = [line.rstrip() for line in f]
 
         # Remove first line "[URL LIST]"
+        # TODO: find way to use parser/check all lines for valid url first
         if len(url_list) > 0:
             url_list = url_list[1:]
 
@@ -71,10 +75,8 @@ class ConfigManager(object):
         """
         Returns full path to audio file named in general config
         """
-        boot_audio_key = "boot_audio"
-
         # Get file name from config
-        audio_filename = self.parser[self.GC_SETTINGS][boot_audio_key]
+        audio_filename = self.parser[self.GC_SETTINGS]["boot_audio"]
 
         # Resolve path and return
         audio_path = self._get_audio_path(audio_filename)
@@ -95,5 +97,11 @@ class ConfigManager(object):
         """
         Returns base directory for archive output
         """
-        val = self.parser[self.GC_SETTINGS]["output_dir"]
-        return val
+        return self.parser[self.GC_SETTINGS]["output_dir"]
+
+    def get_archive_freq(self):
+        """
+        Returns the number of seconds to wait between archive runs
+        """
+        runtime = int(float(self.parser[self.GC_SETTINGS]["archive_frequency"]) * 3600)
+        return runtime
