@@ -1,12 +1,14 @@
 # Standard imports
 import configparser
 import time
+import traceback
 import importlib.resources as import_resources
 
 # Package imports
 from jdae.src.configmanager import ConfigManager
 
 # 3rd Party imports
+import pause
 import youtube_dl
 from playsound import playsound
 
@@ -44,6 +46,7 @@ class JDAE(object):
     OUTPUT_FILE_TMPL = "%(title)s-%(id)s.%(ext)s"
 
     # Logger helper class
+    # TODO: Move this outside to src
     class YTDLLogger(object):
         """
         Logger to print youtube_dl output
@@ -105,7 +108,8 @@ class JDAE(object):
         """
         try:
             ytdl.download([url])
-        except DownloadError:
+        except:
+            # TODO: Add debug mode and print stacktrace
             print(f"\nError occurred on page: {url}\n")
 
     def extract_info_url(self, ytdl, url):
@@ -114,14 +118,15 @@ class JDAE(object):
         """
         try:
             ytdl.extract_info(url, download=False)
-        except DownloadError:
+        except:
+            # TODO: debug mode and move these functions into diff file inside src
             print(f"\nError occurred on page: {url}\n")
 
     def main(self):
         """
         Main JDAE program logic. Starts up and runs archive automation.
         """
-        # TODO: Add support for argparse
+        # TODO: Add support for argparse (or should I just rely on config file?)
 
         # Read settings and urls from config files
         url_list = self.cm.get_url_list()
@@ -160,7 +165,9 @@ class JDAE(object):
                 while True:
                     # For every url in the url_list.ini run youtube_dl operation
                     for url in url_list:
-                        print(f"\n[URL] -- {url}\n")
+                        # TODO: Make prints nicer or create gui experience and monitor output internally
+                        print("\n######")
+                        print(f"[URL] -- {url}\n")
                         # List all downloads available from url
                         # self.extract_info_url(ytdl, url)
 
@@ -170,10 +177,15 @@ class JDAE(object):
                     print(
                         f"\nArchive pass completed. Will check again in {archive_wait_time}s ({archive_wait_time/3600}h)"
                     )
-                    time.sleep(archive_wait_time)
+                    # This is better than time.sleep for large durations
+                    # If archive_wait_time is 6 hours and the PC goes into sleep mode after 30 min
+                    # time.sleep will still have 5h 30m on the sleep timer
+                    # This method ensures that if 6 hours pass in real world time that the wait will be over
+                    pause.seconds(archive_wait_time)
         except:
+            traceback.print_exc()
             print(
-                "Archive engine has failed. Please try again."
+                "\nArchive engine has failed. Please try again."
                 "If the problem persists seek help ;)"
             )
             # TODO: Add debug run option and print stacktrace

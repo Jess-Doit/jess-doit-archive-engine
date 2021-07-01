@@ -7,8 +7,9 @@ SoundCloud automatic backup
 
 ## Getting started
 - Install Python 3 (<=3.7)
+- Go to https://www.python.org/downloads/ and install the latest version of Python 3 for your OS
 - `py -3 -m pip install -U setuptools`
-- clone repo
+- clone repo or download the repo zip and unpack somewhere on your computer
 - `cd jess-doit-archive-engine`
 - `py -3 -m pip install -e .`
 
@@ -31,3 +32,8 @@ SoundCloud automatic backup
 - `py -3 start_jdae.py`
 - The program will print some info to the console and then start interating over the links on the pages set in url_list.ini
 - Kill the program with Ctrl+C in the window. You might need to do it twice (TODO: Fix this later)
+
+## Acknowledgments
+- Built on top of the amazing youtube_dl python library https://github.com/ytdl-org/youtube-dl
+- Startup audio clips from https://soundcloud.com/v1984/2014-sound-logo-studies
+- Support the artist https://soundcloud.com/v1984
