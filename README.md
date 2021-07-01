@@ -35,9 +35,9 @@ SoundCloud automatic backup
 
 ## Accessing your downloads
 - Check the config file for the output_dir value
-- By default the archive saves to ~/JDAE_OUTPUT
-- "~" means home directory. On Windows this is C:\users\<USERNAME>. On Mac this is /Users/<USERNAME>
-- So look for a folder called JDAE_OUTPUT inside of your user directory
+- By default the archive saves to `~/JDAE_OUTPUT`
+- "~" means home directory. On Windows this is `C:\users\<USERNAME>`, on Mac this is `/Users/<USERNAME>`
+- So look for a folder called `JDAE_OUTPUT` inside of your user directory
 
 ## Acknowledgments
 - Built on top of the amazing youtube_dl python library https://github.com/ytdl-org/youtube-dl
