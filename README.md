@@ -5,6 +5,8 @@
 Automated tool to monitor your favorite pages. Ensure you never miss an upload.
 SoundCloud automatic backup
 
+<img src="https://github.com/Jess-Doit/jess-doit-resources/blob/main/jdae/boot.PNG?raw=true" alt="drawing" width="500"/>
+
 ## Getting started
 - Install Python 3 (<=3.7)
 - Go to https://www.python.org/downloads/ and install the latest version of Python 3 for your OS
