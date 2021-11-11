@@ -5,6 +5,9 @@
 Automated tool to monitor your favorite pages. Ensure you never miss an upload.
 SoundCloud automatic backup
 
+Add your favorite pages to the list in url_lists.ini and this program will automatically backup all songs from that page.
+This process is completely automated and by default will check each page every 6 hours. This and other settings can be controlled by modifying gen_config.ini.
+
 <img src="https://github.com/Jess-Doit/jess-doit-resources/blob/main/jdae/boot.PNG?raw=true" alt="drawing" width="500"/>
 
 ## Getting started
