@@ -105,3 +105,9 @@ class ConfigManager(object):
         """
         runtime = int(float(self.parser[self.GC_SETTINGS]["archive_frequency"]) * 3600)
         return runtime
+
+    def get_oauth(self):
+        """
+        Returns Soundcloud OAuth value to enable HQ downloads
+        """
+        return self.parser[self.GC_SETTINGS]["oauth"]

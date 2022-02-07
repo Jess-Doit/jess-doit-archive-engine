@@ -110,6 +110,7 @@ class JDAE(object):
         audio = self.cm.get_boot_audio()
         output_dir = self.cm.get_output_dir()
         archive_wait_time = self.cm.get_archive_freq()
+        oauth = self.cm.get_oauth()
 
         # Print boot sequence and play audio
         if not self.cm.get_skip_intro():
@@ -125,6 +126,10 @@ class JDAE(object):
         print("\n######")
         print(f"ARCHIVE OUTPUT DIRECTORY: {outtmpl}")
         print("######")
+
+        # Set header for HD Soundcould Downloads
+        # TODO: Set this in config and only set if we have token
+        youtube_dl.utils.std_headers['Authorization'] = oauth
 
         # Options for youtube_dl instance
         ytdl_opts = {
