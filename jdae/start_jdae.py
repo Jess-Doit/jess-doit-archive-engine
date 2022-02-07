@@ -10,7 +10,7 @@ from jdae.src.configmanager import ConfigManager
 
 # 3rd Party imports
 import pause
-import youtube_dl
+import yt_dlp
 from playsound import playsound
 
 
@@ -25,14 +25,14 @@ class JDAE(object):
     # TODO: Move this outside to src
     class YTDLLogger(object):
         """
-        Logger to print youtube_dl output
+        Logger to print yt_dlp output
         """
 
         print_flag = False
 
         def debug(self, msg):
             """
-            Print out relevant download information from youtube_dl
+            Print out relevant download information from yt_dlp
             """
             if self.print_flag:
                 print(msg)
@@ -43,13 +43,13 @@ class JDAE(object):
 
         def warning(self, msg):
             """
-            Print out warning messages from youtube_dl
+            Print out warning messages from yt_dlp
             """
             print(f"Warning: {msg}")
 
         def error(self, msg):
             """
-            Print out error messages from youtube_dl
+            Print out error messages from yt_dlp
             """
             print(f"Error: {msg}")
 
@@ -129,9 +129,10 @@ class JDAE(object):
 
         # Set header for HD Soundcould Downloads
         # TODO: Set this in config and only set if we have token
-        youtube_dl.utils.std_headers['Authorization'] = oauth
+        # youtube_dl.utils.std_headers['Authorization'] = oauth
+        yt_dlp.utils.std_headers['Authorization'] = oauth
 
-        # Options for youtube_dl instance
+        # Options for yt_dlp instance
         ytdl_opts = {
             "format": "bestaudio/best",
             "logger": self.YTDLLogger(),
@@ -143,9 +144,10 @@ class JDAE(object):
         print("\nEngine ready - good luck")
         time.sleep(4)
         try:
-            with youtube_dl.YoutubeDL(ytdl_opts) as ytdl:
+            # with youtube_dl.YoutubeDL(ytdl_opts) as ytdl:
+            with yt_dlp.YoutubeDL(ytdl_opts) as ytdl:
                 while True:
-                    # For every url in the url_list.ini run youtube_dl operation
+                    # For every url in the url_list.ini run yt_dlp operation
                     for url in url_list:
                         # TODO: Make prints nicer or create gui experience and monitor output internally
                         print("\n######")
