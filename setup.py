@@ -8,7 +8,7 @@ setup(
     description="Jess Doit's Archive Engine",
     url="https://github.com/Jess-Doit/jess-doit-archive-engine",
     packages=find_namespace_packages(),
-    install_requires=["youtube_dl", "playsound", "pause"],
+    install_requires=["yt-dlp", "playsound", "pause"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

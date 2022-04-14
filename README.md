@@ -45,6 +45,6 @@ This process is completely automated and by default will check each page every 6
 - So look for a folder called `JDAE_OUTPUT` inside of your user directory
 
 ## Acknowledgments
-- Built on top of the amazing youtube_dl python library https://github.com/ytdl-org/youtube-dl
+- Built on top of the amazing yt_dlp python library https://github.com/yt-dlp/yt-dlp
 - Startup audio clips from https://soundcloud.com/v1984/2014-sound-logo-studies
 - Support the artist https://soundcloud.com/v1984
