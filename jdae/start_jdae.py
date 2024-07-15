@@ -145,6 +145,7 @@ class JDAE(object):
         archive_wait_time = self.cm.get_archive_freq()
         oauth = self.cm.get_oauth()
         hq_en = self.cm.get_hq_en()
+        req_int = self.cm.get_sleep_interval_requests()
 
         # Print boot sequence and play audio
         if not self.cm.get_skip_intro():
@@ -172,7 +173,7 @@ class JDAE(object):
             # 'progress_hooks': [self.my_hook],
             "outtmpl": outtmpl,
             # "listformats": True,
-            "sleep_interval_requests": 3,
+            "sleep_interval_requests": req_int,
         }
         # Time to get started
         print("\nEngine ready - good luck")

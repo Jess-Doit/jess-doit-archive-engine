@@ -113,3 +113,10 @@ class ConfigManager(object):
         Returns the True/False value for High Quality Enable
         """
         return self.parser[self.GC_SETTINGS]["high_quality_enable"]
+
+    def get_sleep_interval_requests(self):
+        """
+        Returns sleep_interval_requests int value
+        """
+        val = self.parser[self.GC_SETTINGS]["rate_limit_sec"]
+        return int(val)
