@@ -3,7 +3,6 @@ Boot logo ascii art in various widths
 Image converted with https://www.text-image.com/convert/ascii.html
 """
 
-
 BOOT_LOGO_40 = """
 yyyyhysssssso+o+o:``.-:+ohmmmNMMMMMMMMMM
 hhhhysyyyssoo+ymmhs-.....`:ohmmmNMMMMMMM

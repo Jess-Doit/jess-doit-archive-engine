@@ -1,5 +1,6 @@
 # Standard imports
 import configparser
+
 # import sys
 import time
 import traceback
@@ -11,11 +12,13 @@ from jdae.src.configmanager import ConfigManager
 
 # 3rd Party imports
 import pause
+
 # import simpleaudio
 # import pygame
 # import pyaudio
 # import wave
 import yt_dlp
+
 # from playsound import playsound
 
 
@@ -160,7 +163,7 @@ class JDAE(object):
 
         if hq_en == "True":
             # Set header for HD Soundcould Downloads
-            yt_dlp.utils.std_headers['Authorization'] = oauth
+            yt_dlp.utils.std_headers["Authorization"] = oauth
 
         # Options for yt_dlp instance
         ytdl_opts = {
@@ -169,7 +172,7 @@ class JDAE(object):
             # 'progress_hooks': [self.my_hook],
             "outtmpl": outtmpl,
             # "listformats": True,
-            "sleep_interval_requests": 3
+            "sleep_interval_requests": 3,
         }
         # Time to get started
         print("\nEngine ready - good luck")
