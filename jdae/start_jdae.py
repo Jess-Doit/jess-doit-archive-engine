@@ -1,5 +1,6 @@
 # Standard imports
 import configparser
+# import sys
 import time
 import traceback
 import importlib.resources as import_resources
@@ -10,8 +11,12 @@ from jdae.src.configmanager import ConfigManager
 
 # 3rd Party imports
 import pause
+# import simpleaudio
+# import pygame
+# import pyaudio
+# import wave
 import yt_dlp
-from playsound import playsound
+# from playsound import playsound
 
 
 class JDAE(object):
@@ -74,7 +79,32 @@ class JDAE(object):
         print(self.PRGM_TITLE)
         # print(self.BOOT_LOGO)
         print(logos.BOOT_LOGO_80)
-        playsound(audio)
+        # playsound(audio)
+
+        # with wave.open(audio, "rb") as audio_wf:
+        #     p = pyaudio.PyAudio()
+        #     stream = p.open(
+        #         format=p.get_format_from_width(audio_wf.getsamplewidth()),
+        #         channels=audio_wf.getnchannels(),
+        #         rate=audio_wf.getframerate(),
+        #         output=True
+        #     )
+
+        #     while len(data := audio_wf.readframes(1024)):
+        #         stream.write(data)
+
+        #     stream.close()
+        #     p.terminate()
+
+        # pygame.init()
+        # pygame.mixer.music.load(audio)
+        # pygame.mixer.music.play()
+        # pygame.event.wait()
+
+        # wave = simpleaudio.WaveObject.from_wave_file(audio)
+        # stream = wave.play()
+        # stream.wait_done()
+
         print("\nStarting automated archive client")
 
     def download_from_url(self, ytdl, url):
@@ -111,6 +141,7 @@ class JDAE(object):
         output_dir = self.cm.get_output_dir()
         archive_wait_time = self.cm.get_archive_freq()
         oauth = self.cm.get_oauth()
+        hq_en = self.cm.get_hq_en()
 
         # Print boot sequence and play audio
         if not self.cm.get_skip_intro():
@@ -127,18 +158,18 @@ class JDAE(object):
         print(f"ARCHIVE OUTPUT DIRECTORY: {outtmpl}")
         print("######")
 
-        # Set header for HD Soundcould Downloads
-        # TODO: Set this in config and only set if we have token
-        # youtube_dl.utils.std_headers['Authorization'] = oauth
-        yt_dlp.utils.std_headers['Authorization'] = oauth
+        if hq_en == "True":
+            # Set header for HD Soundcould Downloads
+            yt_dlp.utils.std_headers['Authorization'] = oauth
 
         # Options for yt_dlp instance
         ytdl_opts = {
-            "format": "bestaudio/best",
+            "format": "ba[acodec!*=opus]",
             "logger": self.YTDLLogger(),
-            #'progress_hooks': [self.my_hook],
+            # 'progress_hooks': [self.my_hook],
             "outtmpl": outtmpl,
             # "listformats": True,
+            "sleep_interval_requests": 3
         }
         # Time to get started
         print("\nEngine ready - good luck")

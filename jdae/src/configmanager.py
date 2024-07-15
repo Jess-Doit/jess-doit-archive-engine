@@ -7,9 +7,6 @@ class ConfigManager(object):
     Simplifies reading settings from user controlled config files
     """
 
-    # TODO: Sanatize all user input values. Must verify that things wont be
-    # broken or manipulated in unintended ways
-
     # Config file names
     GEN_CONFIG = "gen_config.ini"
     URL_CONFIG = "url_list.ini"
@@ -65,7 +62,6 @@ class ConfigManager(object):
             url_list = [line.rstrip() for line in f]
 
         # Remove first line "[URL LIST]"
-        # TODO: find way to use parser/check all lines for valid url first
         if len(url_list) > 0:
             url_list = url_list[1:]
 
@@ -111,3 +107,9 @@ class ConfigManager(object):
         Returns Soundcloud OAuth value to enable HQ downloads
         """
         return self.parser[self.GC_SETTINGS]["oauth"]
+
+    def get_hq_en(self):
+        """
+        Returns the True/False value for High Quality Enable
+        """
+        return self.parser[self.GC_SETTINGS]["high_quality_enable"]
