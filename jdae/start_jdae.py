@@ -202,10 +202,7 @@ class JDAE(object):
                     pause.seconds(archive_wait_time)
         except:
             traceback.print_exc()
-            print(
-                "\nArchive engine has failed. Please try again."
-                "If the problem persists seek help ;)"
-            )
+            print("\nArchive engine stopped")
             # TODO: Add debug run option and print stacktrace
 
 
