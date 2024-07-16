@@ -2,7 +2,7 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name="jdae",
-    version="0.1.0",
+    version="0.2.0",
     author="Jess Doit",
     author_email="doit.jesss@gmail.com",
     description="Jess Doit's Archive Engine",
@@ -14,6 +14,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     include_package_data=True,
 )
