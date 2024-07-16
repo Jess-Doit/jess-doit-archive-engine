@@ -120,3 +120,14 @@ class ConfigManager(object):
         """
         val = self.parser[self.GC_SETTINGS]["rate_limit_sec"]
         return int(val)
+
+    def get_listformats(self):
+        """
+        Returns listformats bool value
+        """
+        val = self.parser[self.GC_SETTINGS]["listformats"]
+
+        # Convert string to bool value
+        if val in ["True", "true"]:
+            return True
+        return False

@@ -146,6 +146,7 @@ class JDAE(object):
         oauth = self.cm.get_oauth()
         hq_en = self.cm.get_hq_en()
         req_int = self.cm.get_sleep_interval_requests()
+        list_formats = self.cm.get_listformats()
 
         # Print boot sequence and play audio
         if not self.cm.get_skip_intro():
@@ -172,7 +173,7 @@ class JDAE(object):
             "logger": self.YTDLLogger(),
             # 'progress_hooks': [self.my_hook],
             "outtmpl": outtmpl,
-            # "listformats": True,
+            "listformats": list_formats,
             "sleep_interval_requests": req_int,
         }
         # Time to get started
