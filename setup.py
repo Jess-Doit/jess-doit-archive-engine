@@ -8,7 +8,7 @@ setup(
     description="Jess Doit's Archive Engine",
     url="https://github.com/Jess-Doit/jess-doit-archive-engine",
     packages=find_namespace_packages(),
-    install_requires=["yt-dlp", "pause"],
+    install_requires=["yt-dlp", "pause", "pygame"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
