@@ -6,17 +6,19 @@ Automated tool to monitor your favorite pages. Ensure you never miss an upload.
 SoundCloud automatic backup
 
 Add your favorite pages to the list in url_lists.ini and this program will automatically backup all songs from that page.
-This process is completely automated and by default will check each page every 6 hours. This and other settings can be controlled by modifying gen_config.ini.
+This process is completely automated and by default will check each page every 6 hours. This and other settings can be controlled by modifying `gen_config.ini`.
 
 <img src="https://github.com/Jess-Doit/jess-doit-resources/blob/main/jdae/boot.PNG?raw=true" alt="drawing" width="500"/>
 
 ## Getting started
-- Install Python 3 (<=3.7)
-- Go to https://www.python.org/downloads/ and install the latest version of Python 3 for your OS
-- `py -3 -m pip install -U setuptools`
-- clone repo or download the repo zip and unpack somewhere on your computer
-- `cd jess-doit-archive-engine`
-- `py -3 -m pip install -e .`
+- Install Python 3 (<=3.8)
+  - Go to https://www.python.org/downloads/ and install the latest version of Python 3 for your OS
+- Use pip to install setuptools
+  - `pip install -U setuptools`
+- Clone repo or download the repo zip and unpack somewhere on your computer
+- Navigate to the directory in your terminal and then pip install this repo
+  - `cd jess-doit-archive-engine`
+  - `pip install -e .`
 
 ## Setup config
 - All user configurable files live in the config folder
@@ -34,9 +36,9 @@ This process is completely automated and by default will check each page every 6
 ## Running the program
 - Start a terminal/cmd prompt and `cd <repo_install_path>/jess-doit-archive-engine/jdae`
 - Run the starter program
-- `py -3 start_jdae.py`
+  - `py -3 start_jdae.py`
 - The program will print some info to the console and then start interating over the links on the pages set in url_list.ini
-- Kill the program with Ctrl+C in the window. You might need to do it twice (TODO: Fix this later)
+- Kill the program with Ctrl+C in the window. You might need to do it twice
 
 ## Accessing your downloads
 - Check the config file for the output_dir value
