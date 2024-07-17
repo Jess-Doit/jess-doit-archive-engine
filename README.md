@@ -36,7 +36,7 @@ This process is completely automated and by default will check each page every 6
 ## Running the program
 - Start a terminal/cmd prompt and `cd <repo_install_path>/jess-doit-archive-engine/jdae`
 - Run the starter program
-  - `py -3 start_jdae.py`
+  - `python start_jdae.py`
 - The program will print some info to the console and then start interating over the links on the pages set in url_list.ini
 - Kill the program with Ctrl+C in the window. You might need to do it twice
 
