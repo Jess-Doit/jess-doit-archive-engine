@@ -12,10 +12,10 @@ from jdae.src.configmanager import ConfigManager
 # 3rd Party imports
 import pause
 import yt_dlp
+
 with contextlib.redirect_stdout(None):
     # This imports it with no stdout so we do not see the hello message
     import pygame
-
 
 
 class JDAE(object):
@@ -30,6 +30,7 @@ class JDAE(object):
         """
         Logger to print yt_dlp output
         """
+
         print_flag = False
 
         def debug(self, msg):
