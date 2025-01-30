@@ -11,7 +11,7 @@ This process is completely automated and by default will check each page every 6
 <img src="https://github.com/Jess-Doit/jess-doit-resources/blob/main/jdae/boot.PNG?raw=true" alt="drawing" width="500"/>
 
 ## Getting started
-- Install Python 3 (<=3.8)
+- Install Python 3 (3.8 or newer, recommended latest)
   - Go to https://www.python.org/downloads/ and install the latest version of Python 3 for your OS
 - Use pip to install setuptools
   - `pip install -U setuptools`
