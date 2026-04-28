@@ -200,3 +200,20 @@ class ConfigManager(object):
             "archive_db_path", "~/JDAE_OUTPUT/archive_db.json"
         )
         return str(Path(val).expanduser())
+
+    def get_debug_mode(self) -> bool:
+        """
+        Returns whether debug mode is enabled in config.
+        Defaults to False if not specified.
+        """
+        val = self.parser[self.GC_SETTINGS].get("debug_mode", "False")
+        return self._parse_bool(val)
+
+    def get_run_once_mode(self) -> bool:
+        """
+        Returns whether single-run mode is enabled in config.
+        If True, archive runs once then exits. If False, runs continuously.
+        Defaults to False if not specified.
+        """
+        val = self.parser[self.GC_SETTINGS].get("run_once_mode", "False")
+        return self._parse_bool(val)

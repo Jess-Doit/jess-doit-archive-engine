@@ -19,12 +19,19 @@ def parse_arguments() -> Dict[str, Any]:
         epilog="""
 Examples:
   python start_jdae.py                    # Run with normal boot sequence
+  python start_jdae.py --setup            # Interactive configuration wizard
   python start_jdae.py --skip-intro       # Skip boot sequence
   python start_jdae.py --dry-run          # Preview what would be downloaded
   python start_jdae.py --check-now        # Force immediate check instead of waiting
   python start_jdae.py --debug            # Enable debug logging
   python start_jdae.py --config myconfig.ini  # Use alternate config file
         """,
+    )
+
+    parser.add_argument(
+        "--setup",
+        action="store_true",
+        help="Run interactive configuration wizard",
     )
 
     parser.add_argument(
@@ -67,6 +74,7 @@ Examples:
     args = parser.parse_args()
 
     return {
+        "setup": args.setup,
         "skip_intro": args.skip_intro,
         "dry_run": args.dry_run,
         "check_now": args.check_now,

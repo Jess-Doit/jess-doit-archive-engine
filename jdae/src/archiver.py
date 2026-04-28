@@ -11,12 +11,14 @@ from typing import Optional, List
 
 import pause
 import pygame
+from tqdm import tqdm
 
 from jdae.src.logger import ArchiveLogger
 from jdae.src.state_manager import StateManager
 from jdae.src.status_tracker import StatusTracker
 from jdae.src.downloader import ArchiveDownloader
 from jdae.src.configmanager import ConfigManager
+from jdae.src.ui import get_ui
 import jdae.src.logos as logos
 
 
@@ -56,9 +58,18 @@ class Archiver:
         self.state = state_manager
         self.status = status_tracker
         self.downloader = downloader
+        self.ui = get_ui()
         self.skip_intro = skip_intro
         self.dry_run = dry_run
         self.shutdown_requested = False
+        
+        # Session tracking for summary reports
+        self.session_start_time = None
+        self.session_urls_checked = 0
+        self.session_new_downloads = 0
+        self.session_skipped = 0
+        self.session_errors = 0
+        self.session_permanently_skipped = 0
 
         # Set up signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -79,7 +90,7 @@ class Archiver:
             audio_path: Path to audio file to play
         """
         print()
-        print(self.PRGM_TITLE)
+        self.ui.print_header(self.PRGM_TITLE)
         print(logos.BOOT_LOGO_80)
 
         try:
@@ -93,7 +104,7 @@ class Archiver:
         except Exception as e:
             self.logger.warning(f"Failed to play boot audio: {e}")
 
-        print("\nStarting automated archive client")
+        self.ui.print_starting_engine(skip_intro=False)
 
     def download_from_url(self, url: str, url_number: int = 1, total_urls: int = 1) -> tuple[int, int]:
         """
@@ -127,7 +138,7 @@ class Archiver:
                 info = self.downloader.extract_info(url)
                 if info and "entries" in info:
                     attempted = len(info["entries"])
-                    self.logger.info(f"[DRY-RUN] {attempted} items available")
+                    self.ui.print_download_preview(attempted, url)
                     self.status.update_download_progress(attempted=attempted)
             else:
                 # Perform actual download with retries
@@ -171,25 +182,23 @@ class Archiver:
         Run archive check once and exit.
         """
         self.logger.info("Starting single archive pass")
+        self.session_start_time = time.time()
 
         url_list = self.config.get_url_list()
         if not url_list:
-            self.logger.warning("No URLs configured in url_list.ini")
+            self.ui.print_warning("No URLs configured in url_list.ini")
             return
 
         # Filter out empty URLs
         active_urls = [url for url in url_list if url.strip()]
         total_urls = len(active_urls)
 
-        # Print list of pages to user
-        print("\nMonitoring the following pages:")
-        for url in active_urls:
-            print(f" - {url}")
-
+        # Show configuration
         output_dir = self.config.get_output_dir()
-        print(f"\n######\nARCHIVE OUTPUT DIRECTORY: {output_dir}/archive/%(playlist)s/")
+        archive_freq = self.config.get_archive_freq()
+        self.ui.print_config_summary(active_urls, output_dir, archive_freq)
 
-        print("\nEngine ready - good luck")
+        self.ui.print_info("Engine ready - good luck")
         time.sleep(2)
 
         total_attempted = 0
@@ -197,32 +206,46 @@ class Archiver:
 
         # Initialize session tracking
         self.status.start_session(total_urls)
+        self.session_urls_checked = 0
 
         try:
-            # Process each URL
-            for url_number, url in enumerate(active_urls, 1):
-                if self.shutdown_requested:
-                    self.logger.info("Shutdown requested, stopping archive pass")
-                    break
+            # Process each URL with progress bar
+            with tqdm(total=total_urls, desc="Archive Pass Progress", unit="URL") as pbar:
+                for url_number, url in enumerate(active_urls, 1):
+                    if self.shutdown_requested:
+                        self.logger.info("Shutdown requested, stopping archive pass")
+                        break
 
-                print(f"\n######\n[URL] -- {url}\n")
-                attempted, downloaded = self.download_from_url(url, url_number, total_urls)
-                total_attempted += attempted
-                total_downloaded += downloaded
+                    self.ui.print_url_start(url, url_number, total_urls)
+                    attempted, downloaded = self.download_from_url(url, url_number, total_urls)
+                    total_attempted += attempted
+                    total_downloaded += downloaded
+                    self.session_urls_checked += 1
+                    self.session_new_downloads += downloaded
+                    
+                    pbar.update(1)
+                    pbar.set_description(f"Downloaded: {self.session_new_downloads}")
 
         except KeyboardInterrupt:
-            print("\n\nArchive pass interrupted by user")
+            self.ui.print_shutdown_notice()
             self.logger.info("Archive pass interrupted by user (Ctrl+C)")
         except Exception as e:
-            print(f"\nUnexpected error: {e}")
+            self.ui.print_error(f"Unexpected error: {e}")
             self.logger.error(f"Unexpected error during archive pass: {traceback.format_exc()}")
         finally:
             self.status.complete_session()
-
-        print(f"\n######\nArchive pass completed.")
-        self.logger.info(
-            f"Archive pass complete: {total_downloaded}/{total_attempted} downloaded"
-        )
+            
+            # Print summary report
+            elapsed_time = time.time() - self.session_start_time if self.session_start_time else 0
+            self.ui.print_summary_report(
+                urls_checked=self.session_urls_checked,
+                new_downloads=self.session_new_downloads,
+                skipped=self.session_skipped,
+                errors_with_retry=self.session_errors,
+                permanently_skipped=self.session_permanently_skipped,
+                elapsed_time=elapsed_time,
+                next_check_in=0  # Last pass, no next check
+            )
 
     def run_continuous(self) -> None:
         """
@@ -232,23 +255,19 @@ class Archiver:
 
         url_list = self.config.get_url_list()
         if not url_list:
-            self.logger.error("No URLs configured in url_list.ini")
+            self.ui.print_error("No URLs configured in url_list.ini")
             return
 
         # Filter out empty URLs
         active_urls = [url for url in url_list if url.strip()]
         total_urls = len(active_urls)
 
-        # Print list of pages to user
-        print("\nMonitoring the following pages:")
-        for url in active_urls:
-            print(f" - {url}")
-
+        # Show configuration
         output_dir = self.config.get_output_dir()
         archive_wait_time = self.config.get_archive_freq()
-        print(f"\n######\nARCHIVE OUTPUT DIRECTORY: {output_dir}/archive/%(playlist)s/")
+        self.ui.print_config_summary(active_urls, output_dir, archive_wait_time)
 
-        print("\nEngine ready - good luck")
+        self.ui.print_info("Engine ready - good luck")
         time.sleep(2)
 
         try:
@@ -256,24 +275,47 @@ class Archiver:
                 if self.shutdown_requested:
                     break
 
+                # Reset session counters for new pass
+                self.session_start_time = time.time()
+                self.session_urls_checked = 0
+                self.session_new_downloads = 0
+                self.session_skipped = 0
+                self.session_errors = 0
+
                 # Initialize session tracking
                 self.status.start_session(total_urls)
 
                 try:
-                    # For every url in the url_list run archiving
-                    for url_number, url in enumerate(active_urls, 1):
-                        if self.shutdown_requested:
-                            break
+                    # For every url in the url_list run archiving with progress bar
+                    with tqdm(total=total_urls, desc="Archive Pass Progress", unit="URL") as pbar:
+                        for url_number, url in enumerate(active_urls, 1):
+                            if self.shutdown_requested:
+                                break
 
-                        print(f"\n######\n[URL] -- {url}\n")
-                        self.download_from_url(url, url_number, total_urls)
+                            self.ui.print_url_start(url, url_number, total_urls)
+                            attempted, downloaded = self.download_from_url(url, url_number, total_urls)
+                            self.session_urls_checked += 1
+                            self.session_new_downloads += downloaded
+                            
+                            pbar.update(1)
+                            pbar.set_description(f"Downloaded: {self.session_new_downloads}")
 
                 finally:
                     self.status.complete_session()
+                    
+                    # Print summary report
+                    elapsed_time = time.time() - self.session_start_time
+                    self.ui.print_summary_report(
+                        urls_checked=self.session_urls_checked,
+                        new_downloads=self.session_new_downloads,
+                        skipped=self.session_skipped,
+                        errors_with_retry=self.session_errors,
+                        permanently_skipped=self.session_permanently_skipped,
+                        elapsed_time=elapsed_time,
+                        next_check_in=archive_wait_time
+                    )
 
-                print(
-                    f"\n######\nArchive pass completed. Will check again in {archive_wait_time}s ({archive_wait_time/3600:.1f}h)"
-                )
+                self.ui.print_waiting_message(archive_wait_time)
                 self.logger.info(
                     f"Archive pass complete. Next check in {archive_wait_time/3600:.1f} hours"
                 )
@@ -282,10 +324,10 @@ class Archiver:
                 pause.seconds(archive_wait_time)
 
         except KeyboardInterrupt:
-            print("\n\nArchive engine stopped by user")
+            self.ui.print_shutdown_notice()
             self.logger.info("Archive engine stopped by user (Ctrl+C)")
         except Exception as e:
-            print(f"\nUnexpected error: {e}")
+            self.ui.print_error(f"Unexpected error: {e}")
             self.logger.error(f"Unexpected error in main loop: {traceback.format_exc()}")
 
     def run(self, run_once: bool = False) -> None:

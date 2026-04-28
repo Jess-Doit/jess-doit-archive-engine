@@ -4,12 +4,14 @@ Minimal startup script that initializes all components and starts archiving.
 """
 
 from jdae.src.cli import parse_arguments
+from jdae.src.config_wizard import run_setup_wizard
 from jdae.src.configmanager import ConfigManager
 from jdae.src.logger import ArchiveLogger
 from jdae.src.state_manager import StateManager
 from jdae.src.status_tracker import StatusTracker
 from jdae.src.downloader import ArchiveDownloader
 from jdae.src.archiver import Archiver
+from jdae.src.ui import get_ui
 
 
 def main():
@@ -20,9 +22,26 @@ def main():
     # Parse command-line arguments
     args = parse_arguments()
 
+    # Handle setup wizard
+    if args.get("setup"):
+        ui = get_ui()
+        if run_setup_wizard():
+            ui.print_success("Setup complete! Run 'python start_jdae.py' to start archiving")
+        return
+
     try:
+        # Initialize UI
+        ui = get_ui(verbose=args.get("debug", False))
+
         # Initialize ConfigManager (with optional custom config path)
         config = ConfigManager(custom_config_path=args.get("config_path"))
+
+        # Merge config and CLI options (CLI takes precedence)
+        # For debug_mode: CLI --debug flag overrides config value
+        debug_mode = args.get("debug") if args.get("debug") is not None else config.get_debug_mode()
+        
+        # For run_once: CLI --once flag overrides config value
+        run_once = args.get("run_once") if args.get("run_once") is not None else config.get_run_once_mode()
 
         # Get configuration values
         output_dir = config.get_output_dir()
@@ -32,7 +51,6 @@ def main():
         listformats = config.get_listformats()
 
         # Initialize Logger
-        debug_mode = args.get("debug", False)
         logger = ArchiveLogger(output_dir, debug=debug_mode)
         logger.info("JDAE starting up")
         logger.debug(f"Debug mode: {debug_mode}")
@@ -55,7 +73,7 @@ def main():
             listformats=listformats,
         )
 
-        # Initialize Archiver
+        # Initialize Archiver (pass UI for display)
         archiver = Archiver(
             config_manager=config,
             logger=logger,
@@ -66,10 +84,8 @@ def main():
             dry_run=args.get("dry_run", False),
         )
 
-        # Determine whether to run once or continuously
-        run_once = args.get("run_once", False)
+        # Check for --check-now flag which implies single-run
         if args.get("check_now"):
-            # --check-now implies run once
             run_once = True
 
         # Start the archive engine
