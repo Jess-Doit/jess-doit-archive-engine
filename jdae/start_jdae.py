@@ -1,181 +1,112 @@
-# Standard imports
-import configparser
-import contextlib
-import time
-import traceback
-import importlib.resources as import_resources
+"""
+Entry point for JDAE (Jess' Archive Engine).
+Minimal startup script that initializes all components and starts archiving.
+"""
 
-# Package imports
-import jdae.src.logos as logos
+from jdae.src.cli import parse_arguments
+from jdae.src.config_wizard import run_setup_wizard
 from jdae.src.configmanager import ConfigManager
-
-# 3rd Party imports
-import pause
-import yt_dlp
-
-with contextlib.redirect_stdout(None):
-    # This imports it with no stdout so we do not see the hello message
-    import pygame
+from jdae.src.logger import ArchiveLogger
+from jdae.src.state_manager import StateManager
+from jdae.src.status_tracker import StatusTracker
+from jdae.src.downloader import ArchiveDownloader
+from jdae.src.archiver import Archiver
+from jdae.src.ui import get_ui
 
 
-class JDAE(object):
-    # Title to print before logo
-    PRGM_TITLE = "Jess' Archive Engine"
+def main():
+    """
+    Main entry point for JDAE.
+    Initializes all components and starts the archive engine.
+    """
+    # Parse command-line arguments
+    args = parse_arguments()
 
-    # Naming template for files output by downloader
-    OUTPUT_FILE_TMPL = "%(title)s-%(id)s.%(ext)s"
+    # Handle setup wizard
+    if args.get("setup"):
+        ui = get_ui()
+        if run_setup_wizard():
+            ui.print_success(
+                "Setup complete! Run 'python start_jdae.py' to start archiving"
+            )
+        return
 
-    # Logger helper class
-    class YTDLLogger(object):
-        """
-        Logger to print yt_dlp output
-        """
+    try:
+        # Initialize UI
+        ui = get_ui(verbose=args.get("debug", False))
 
-        print_flag = False
+        # Initialize ConfigManager (with optional custom config path)
+        config = ConfigManager(custom_config_path=args.get("config_path"))
 
-        def debug(self, msg):
-            """
-            Print out relevant download information from yt_dlp
-            """
-            if self.print_flag:
-                print(msg)
-                self.print_flag = False
-            elif msg.startswith("[download]"):
-                print(msg)
-                self.print_flag = True
+        # Merge config and CLI options (CLI takes precedence)
+        # For debug_mode: CLI --debug flag overrides config value
+        debug_mode = (
+            args.get("debug")
+            if args.get("debug") is not None
+            else config.get_debug_mode()
+        )
 
-        def warning(self, msg):
-            """
-            Print out warning messages from yt_dlp
-            """
-            print(f"Warning: {msg}")
+        # For run_once: CLI --once flag overrides config value
+        run_once = (
+            args.get("run_once")
+            if args.get("run_once") is not None
+            else config.get_run_once_mode()
+        )
 
-        def error(self, msg):
-            """
-            Print out error messages from yt_dlp
-            """
-            print(f"Error: {msg}")
+        # Get configuration values
+        output_dir = config.get_output_dir()
+        oauth = config.get_oauth()
+        hq_enabled = config.get_hq_en()
+        rate_limit = config.get_sleep_interval_requests()
+        listformats = config.get_listformats()
 
-    def __init__(self):
-        """
-        Constructor for JDAE
-        """
-        self.cm = ConfigManager()
+        # Initialize Logger
+        logger = ArchiveLogger(output_dir, debug=debug_mode)
+        logger.info("JDAE starting up")
+        logger.debug(f"Debug mode: {debug_mode}")
 
-    def my_hook(self, d):
-        """
-        Hook for finished downloads
-        """
-        if d["status"] == "finished":
-            print("Done downloading, now converting ...")
+        # Initialize StateManager
+        state_db_path = config.get_state_db_path()
+        state_manager = StateManager(state_db_path, logger)
 
-    def boot_sequence(self, audio):
-        """
-        Prints title + logo, and plays startup audio
-        """
-        print()
-        print(self.PRGM_TITLE)
-        print(logos.BOOT_LOGO_80)
+        # Initialize StatusTracker
+        status_file = f"{output_dir}/status.json"
+        status_tracker = StatusTracker(status_file, logger)
 
-        # Use pygame to play audio across platforms
-        # Do not call pygame.init(), we don't need all that
-        pygame.mixer.init()
-        pygame.mixer.music.load(audio)
-        pygame.mixer.music.play()
-        while pygame.mixer.get_busy():
-            time.sleep(1)
+        # Initialize Downloader
+        downloader = ArchiveDownloader(
+            output_dir=output_dir,
+            logger=logger,
+            oauth=oauth,
+            hq_enabled=hq_enabled,
+            rate_limit_sec=rate_limit,
+            listformats=listformats,
+        )
 
-        print("\nStarting automated archive client")
+        # Initialize Archiver (pass UI for display)
+        archiver = Archiver(
+            config_manager=config,
+            logger=logger,
+            state_manager=state_manager,
+            status_tracker=status_tracker,
+            downloader=downloader,
+            skip_intro=args.get("skip_intro", False),
+            dry_run=args.get("dry_run", False),
+        )
 
-    def download_from_url(self, ytdl, url):
-        """
-        Download all relevant media from url
+        # Check for --check-now flag which implies single-run
+        if args.get("check_now"):
+            run_once = True
 
-        Skips media that has already been downloaded
-        """
-        try:
-            ytdl.download([url])
-        except:
-            print(f"\nError occurred on page: {url}\n")
+        # Start the archive engine
+        archiver.run(run_once=run_once)
 
-    def extract_info_url(self, ytdl, url):
-        """
-        List all media that will be downloaded from url
-        """
-        try:
-            ytdl.extract_info(url, download=False)
-        except:
-            print(f"\nError occurred on page: {url}\n")
-
-    def main(self):
-        """
-        Main JDAE program logic. Starts up and runs archive automation.
-        """
-        # Read settings and url list from config files
-        url_list = self.cm.get_url_list()
-        audio = self.cm.get_boot_audio()
-        output_dir = self.cm.get_output_dir()
-        archive_wait_time = self.cm.get_archive_freq()
-        oauth = self.cm.get_oauth()
-        req_int = self.cm.get_sleep_interval_requests()
-        list_formats = self.cm.get_listformats()
-
-        # Print boot sequence and play audio
-        if not self.cm.get_skip_intro():
-            self.boot_sequence(audio)
-
-        # Print list of pages to user that will be processed
-        print("\nMonitoring the following pages:")
-        for url in url_list:
-            print(f" - {url}")
-
-        # Construct output path template
-        outtmpl = f"{output_dir}/archive/%(playlist)s/{self.OUTPUT_FILE_TMPL}"
-        print(f"\n######\nARCHIVE OUTPUT DIRECTORY: {outtmpl}")
-
-        if self.cm.get_hq_en():
-            # Set header for HD Soundcould Downloads
-            yt_dlp.utils.std_headers["Authorization"] = oauth
-
-        # Options for yt_dlp instance
-        ytdl_opts = {
-            "format": "ba[acodec!*=opus]",
-            "logger": self.YTDLLogger(),
-            "outtmpl": outtmpl,
-            "listformats": list_formats,
-            "sleep_interval_requests": req_int,
-            # 'progress_hooks': [self.my_hook],
-        }
-
-        # Time to get started
-        print("\nEngine ready - good luck")
-        time.sleep(2)
-        try:
-            with yt_dlp.YoutubeDL(ytdl_opts) as ytdl:
-                while True:
-                    # For every url in the url_list.ini run yt_dlp operation
-                    for url in url_list:
-                        print(f"\n######\n[URL] -- {url}\n")
-
-                        # Download all media from url
-                        self.download_from_url(ytdl, url)
-
-                        # List all downloads available from url
-                        # self.extract_info_url(ytdl, url)
-                    print(
-                        f"\n######\nArchive pass completed. Will check again in {archive_wait_time}s ({archive_wait_time/3600}h)"
-                    )
-
-                    # This is better than time.sleep for large durations
-                    # If archive_wait_time is 6 hours and the PC goes into sleep mode after 30 min
-                    # time.sleep will still have 5h 30m on the sleep timer
-                    # This method ensures that if 6 hours pass in real world time that the wait will be over
-                    pause.seconds(archive_wait_time)
-        except:
-            traceback.print_exc()
-            print("\nArchive engine stopped")
+    except KeyboardInterrupt:
+        print("\nArchive engine stopped by user")
+    except Exception as e:
+        print(f"Fatal error: {e}")
+        raise
 
 
 if __name__ == "__main__":
-    jdae = JDAE()
-    jdae.main()
+    main()

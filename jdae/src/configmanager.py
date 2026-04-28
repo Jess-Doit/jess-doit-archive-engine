@@ -1,5 +1,7 @@
 import configparser
 import importlib.resources as import_resources
+from pathlib import Path
+from typing import Optional
 
 
 class ConfigManager(object):
@@ -18,17 +20,27 @@ class ConfigManager(object):
     # General config sections
     GC_SETTINGS = "SETTINGS"
 
-    def __init__(self):
+    def __init__(self, custom_config_path: Optional[str] = None):
         """
         ConfigManager constructor
+
+        Args:
+            custom_config_path: Optional path to custom gen_config.ini file
         """
         # Get paths to ini config files
-        self.gen_config_path = self._get_config_path(self.GEN_CONFIG)
+        if custom_config_path:
+            self.gen_config_path = str(Path(custom_config_path).expanduser())
+        else:
+            self.gen_config_path = self._get_config_path(self.GEN_CONFIG)
+
         self.url_config_path = self._get_config_path(self.URL_CONFIG)
 
         # Create config parser and parse general config file
         self.parser = configparser.ConfigParser()
         self.parser.read(self.gen_config_path)
+
+        # Validate that required config exists
+        self._validate_config()
 
     def _get_config_path(self, filename):
         """
@@ -52,6 +64,42 @@ class ConfigManager(object):
             return config_path
         except:
             return ""
+
+    def _parse_bool(self, value: str) -> bool:
+        """
+        Parse string to boolean value consistently.
+
+        Args:
+            value: String value to parse
+
+        Returns:
+            Boolean value
+        """
+        return str(value).lower() in ["true", "yes", "1", "on"]
+
+    def _validate_config(self) -> None:
+        """
+        Validate that required config keys exist in the config file.
+        Raises KeyError if required keys are missing.
+        """
+        required_keys = [
+            "skip_intro",
+            "boot_audio",
+            "output_dir",
+            "archive_frequency",
+            "oauth",
+            "high_quality_enable",
+            "rate_limit_sec",
+            "listformats",
+        ]
+
+        missing_keys = []
+        for key in required_keys:
+            if key not in self.parser[self.GC_SETTINGS]:
+                missing_keys.append(key)
+
+        if missing_keys:
+            raise KeyError(f"Missing required config keys: {', '.join(missing_keys)}")
 
     def get_url_list(self):
         """
@@ -83,17 +131,14 @@ class ConfigManager(object):
         Returns skip intro bool value
         """
         val = self.parser[self.GC_SETTINGS]["skip_intro"]
-
-        # Convert string to bool value
-        if val in ["True", "true"]:
-            return True
-        return False
+        return self._parse_bool(val)
 
     def get_output_dir(self):
         """
-        Returns base directory for archive output
+        Returns base directory for archive output (with ~ expanded)
         """
-        return self.parser[self.GC_SETTINGS]["output_dir"]
+        output_dir = self.parser[self.GC_SETTINGS]["output_dir"]
+        return str(Path(output_dir).expanduser())
 
     def get_archive_freq(self):
         """
@@ -113,11 +158,7 @@ class ConfigManager(object):
         Returns the True/False value for High Quality Enable
         """
         val = self.parser[self.GC_SETTINGS]["high_quality_enable"]
-
-        # Convert string to bool value
-        if val in ["True", "true"]:
-            return True
-        return False
+        return self._parse_bool(val)
 
     def get_sleep_interval_requests(self):
         """
@@ -131,8 +172,46 @@ class ConfigManager(object):
         Returns listformats bool value
         """
         val = self.parser[self.GC_SETTINGS]["listformats"]
+        return self._parse_bool(val)
 
-        # Convert string to bool value
-        if val in ["True", "true"]:
-            return True
-        return False
+    def get_initial_page_dl_limit(self) -> int:
+        """
+        Returns the initial page download limit.
+        Returns -1 if no limit should be applied.
+        """
+        val = self.parser[self.GC_SETTINGS].get("initial_page_dl_limit", "-1")
+        return int(val)
+
+    def get_archived_page_dl_limit(self) -> int:
+        """
+        Returns the archived page download limit.
+        Returns -1 if no limit should be applied.
+        """
+        val = self.parser[self.GC_SETTINGS].get("archived_page_dl_limit", "-1")
+        return int(val)
+
+    def get_state_db_path(self) -> str:
+        """
+        Returns the path to the archive state database file.
+        """
+        val = self.parser[self.GC_SETTINGS].get(
+            "archive_db_path", "~/JDAE_OUTPUT/archive_db.json"
+        )
+        return str(Path(val).expanduser())
+
+    def get_debug_mode(self) -> bool:
+        """
+        Returns whether debug mode is enabled in config.
+        Defaults to False if not specified.
+        """
+        val = self.parser[self.GC_SETTINGS].get("debug_mode", "False")
+        return self._parse_bool(val)
+
+    def get_run_once_mode(self) -> bool:
+        """
+        Returns whether single-run mode is enabled in config.
+        If True, archive runs once then exits. If False, runs continuously.
+        Defaults to False if not specified.
+        """
+        val = self.parser[self.GC_SETTINGS].get("run_once_mode", "False")
+        return self._parse_bool(val)
