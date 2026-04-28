@@ -27,12 +27,12 @@ class ArchiveUI:
 
     # Progress messages for variety
     PROGRESS_MESSAGES = [
-        "🎵 Diving deep into the archives...",
-        "🎵 Scanning for new tracks...",
-        "🎵 Checking for updates...",
-        "🎵 Archiving in progress...",
-        "🎵 Working through the collection...",
-        "🎵 Keeping the archive fresh...",
+        "Diving deep into the archives...",
+        "Scanning for new tracks...",
+        "Checking for updates...",
+        "Archiving in progress...",
+        "Working through the collection...",
+        "Keeping the archive fresh...",
     ]
 
     def __init__(self, verbose: bool = False):
@@ -65,19 +65,19 @@ class ArchiveUI:
 
     def print_info(self, text: str) -> None:
         """Print informational message."""
-        print(f"{self.INFO_COLOR}ℹ️  {text}{Style.RESET_ALL}")
+        print(f"{self.INFO_COLOR}[INFO] {text}{Style.RESET_ALL}")
 
     def print_success(self, text: str) -> None:
         """Print success message."""
-        print(f"{self.SUCCESS_COLOR}✓ {text}{Style.RESET_ALL}")
+        print(f"{self.SUCCESS_COLOR}[OK] {text}{Style.RESET_ALL}")
 
     def print_warning(self, text: str) -> None:
         """Print warning message."""
-        print(f"{self.WARNING_COLOR}⚠ {text}{Style.RESET_ALL}")
+        print(f"{self.WARNING_COLOR}[WARN] {text}{Style.RESET_ALL}")
 
     def print_error(self, text: str) -> None:
         """Print error message."""
-        print(f"{self.ERROR_COLOR}✗ {text}{Style.RESET_ALL}")
+        print(f"{self.ERROR_COLOR}[ERROR] {text}{Style.RESET_ALL}")
 
     def print_progress(self, text: str) -> None:
         """Print progress message with personality."""
@@ -90,7 +90,7 @@ class ArchiveUI:
     def print_url_start(self, url: str, number: int, total: int) -> None:
         """Print start of URL processing."""
         self.print_section(f"Processing URL {number}/{total}")
-        print(f"{self.DIM_COLOR}→ {url}{Style.RESET_ALL}")
+        print(f"{self.DIM_COLOR}  {url}{Style.RESET_ALL}")
 
     def print_url_complete(self, url: str, success: bool, reason: str = "") -> None:
         """Print completion of URL processing."""
@@ -150,22 +150,22 @@ class ArchiveUI:
     def print_connection_error(self, url: str, reason: str) -> None:
         """Print connection error with suggestion."""
         self.print_error(f"Connection error: {reason}")
-        self.print_info("→ Check internet connection and try again")
+        self.print_info("Check internet connection and try again")
 
     def print_invalid_url_error(self, url: str) -> None:
         """Print invalid URL error."""
         self.print_error(f"Invalid URL: {url}")
-        self.print_info("→ Verify the URL is a valid SoundCloud link")
+        self.print_info("Verify the URL is a valid SoundCloud link")
 
     def print_not_found_error(self, url: str) -> None:
         """Print not found error."""
         self.print_error(f"URL not found: {url}")
-        self.print_info("→ The page may have been deleted or made private")
+        self.print_info("The page may have been deleted or made private")
 
     def print_oauth_error(self) -> None:
         """Print OAuth token error."""
         self.print_error("OAuth token invalid or expired")
-        self.print_info("→ Check your OAuth token in gen_config.ini")
+        self.print_info("Check your OAuth token in gen_config.ini")
 
     def print_starting_engine(self, skip_intro: bool = False) -> None:
         """Print engine startup message."""
