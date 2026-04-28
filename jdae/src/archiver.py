@@ -3,13 +3,16 @@ Archive orchestrator module for JDAE.
 Handles the main archiving workflow and coordinates all components.
 """
 
-import contextlib
+import os
 import signal
 import time
 import traceback
 from typing import Optional, List
 
 import pause
+
+# Suppress pygame welcome message before import
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 from tqdm import tqdm
 
@@ -95,12 +98,11 @@ class Archiver:
 
         try:
             # Use pygame to play audio across platforms
-            with contextlib.redirect_stdout(None):
-                pygame.mixer.init()
+            pygame.mixer.init()
             pygame.mixer.music.load(audio_path)
             pygame.mixer.music.play()
             while pygame.mixer.get_busy():
-                time.sleep(1)
+                time.sleep(0.1)
         except Exception as e:
             self.logger.warning(f"Failed to play boot audio: {e}")
 
