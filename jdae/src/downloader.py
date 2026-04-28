@@ -3,7 +3,8 @@ yt-dlp wrapper module for JDAE.
 Handles downloading from SoundCloud URLs with proper logging and error handling.
 """
 
-from typing import Optional, List
+from typing import Optional, List, Tuple
+import time
 import yt_dlp
 
 from jdae.src.logger import ArchiveLogger
@@ -102,47 +103,71 @@ class ArchiveDownloader:
 
         return options
 
-    def download(self, url: str, max_downloads: Optional[int] = None) -> bool:
+    def download(self, url: str, max_downloads: Optional[int] = None, max_retries: int = 3) -> Tuple[bool, str]:
         """
-        Download content from URL.
+        Download content from URL with retry logic.
 
         Args:
             url: SoundCloud URL to download from
             max_downloads: Maximum number of files to download (None = unlimited)
+            max_retries: Maximum number of retry attempts
 
         Returns:
-            True if download succeeded, False if failed
+            Tuple of (success: bool, reason: str)
         """
-        try:
-            # Set HQ download header if enabled
-            if self.hq_enabled and self.oauth:
-                yt_dlp.utils.std_headers["Authorization"] = self.oauth
+        last_error = None
+        retry_delays = [2, 5, 10]  # Exponential backoff: 2s, 5s, 10s
 
-            # Build output template
-            output_template = f"{self.output_dir}/archive/%(playlist)s/{self.OUTPUT_FILE_TEMPLATE}"
+        for attempt in range(max_retries):
+            try:
+                # Set HQ download header if enabled
+                if self.hq_enabled and self.oauth:
+                    yt_dlp.utils.std_headers["Authorization"] = self.oauth
 
-            # Get options
-            options = self._get_ytdl_options(output_template)
+                # Build output template
+                output_template = f"{self.output_dir}/archive/%(playlist)s/{self.OUTPUT_FILE_TEMPLATE}"
 
-            # If max_downloads specified, add it to options
-            if max_downloads is not None and max_downloads > 0:
-                options["playlistend"] = max_downloads
+                # Get options
+                options = self._get_ytdl_options(output_template)
 
-            self.logger.debug(f"Starting download from {url}")
-            self.logger.debug(f"Output template: {output_template}")
+                # If max_downloads specified, add it to options
+                if max_downloads is not None and max_downloads > 0:
+                    options["playlistend"] = max_downloads
 
-            with yt_dlp.YoutubeDL(options) as ytdl:
-                ytdl.download([url])
+                self.logger.debug(f"Starting download from {url} (attempt {attempt + 1}/{max_retries})")
+                self.logger.debug(f"Output template: {output_template}")
 
-            self.logger.info(f"Successfully completed download from {url}")
-            return True
+                with yt_dlp.YoutubeDL(options) as ytdl:
+                    ytdl.download([url])
 
-        except yt_dlp.utils.DownloadError as e:
-            self.logger.error(f"Download error for {url}: {str(e)}")
-            return False
-        except Exception as e:
-            self.logger.error(f"Unexpected error downloading from {url}: {str(e)}")
-            return False
+                self.logger.info(f"Successfully completed download from {url}")
+                return True, "Success"
+
+            except yt_dlp.utils.DownloadError as e:
+                error_msg = str(e)
+                self.logger.warning(f"Download error for {url} (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                
+                # Don't retry certain errors (invalid URL, not found, etc)
+                if "not found" in error_msg.lower() or "invalid" in error_msg.lower():
+                    self.logger.error(f"Permanent error, not retrying: {error_msg}")
+                    return False, f"Permanent error: {error_msg}"
+                
+                last_error = error_msg
+
+            except Exception as e:
+                error_msg = str(e)
+                self.logger.warning(f"Unexpected error downloading from {url} (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                last_error = error_msg
+
+            # If not the last attempt, wait before retrying
+            if attempt < max_retries - 1:
+                wait_time = retry_delays[attempt]
+                self.logger.info(f"Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+
+        # All retries exhausted
+        self.logger.error(f"Failed to download from {url} after {max_retries} attempts: {last_error}")
+        return False, f"Failed after {max_retries} attempts: {last_error}"
 
     def extract_info(self, url: str) -> dict:
         """

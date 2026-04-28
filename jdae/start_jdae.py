@@ -7,6 +7,7 @@ from jdae.src.cli import parse_arguments
 from jdae.src.configmanager import ConfigManager
 from jdae.src.logger import ArchiveLogger
 from jdae.src.state_manager import StateManager
+from jdae.src.status_tracker import StatusTracker
 from jdae.src.downloader import ArchiveDownloader
 from jdae.src.archiver import Archiver
 
@@ -40,6 +41,10 @@ def main():
         state_db_path = config.get_state_db_path()
         state_manager = StateManager(state_db_path, logger)
 
+        # Initialize StatusTracker
+        status_file = f"{output_dir}/status.json"
+        status_tracker = StatusTracker(status_file, logger)
+
         # Initialize Downloader
         downloader = ArchiveDownloader(
             output_dir=output_dir,
@@ -55,6 +60,7 @@ def main():
             config_manager=config,
             logger=logger,
             state_manager=state_manager,
+            status_tracker=status_tracker,
             downloader=downloader,
             skip_intro=args.get("skip_intro", False),
             dry_run=args.get("dry_run", False),

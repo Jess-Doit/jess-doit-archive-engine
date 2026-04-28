@@ -4,6 +4,7 @@ Handles the main archiving workflow and coordinates all components.
 """
 
 import contextlib
+import signal
 import time
 import traceback
 from typing import Optional, List
@@ -13,6 +14,7 @@ import pygame
 
 from jdae.src.logger import ArchiveLogger
 from jdae.src.state_manager import StateManager
+from jdae.src.status_tracker import StatusTracker
 from jdae.src.downloader import ArchiveDownloader
 from jdae.src.configmanager import ConfigManager
 import jdae.src.logos as logos
@@ -32,6 +34,7 @@ class Archiver:
         config_manager: ConfigManager,
         logger: ArchiveLogger,
         state_manager: StateManager,
+        status_tracker: StatusTracker,
         downloader: ArchiveDownloader,
         skip_intro: bool = False,
         dry_run: bool = False,
@@ -43,6 +46,7 @@ class Archiver:
             config_manager: ConfigManager instance
             logger: ArchiveLogger instance
             state_manager: StateManager instance
+            status_tracker: StatusTracker instance
             downloader: ArchiveDownloader instance
             skip_intro: If True, skip boot sequence
             dry_run: If True, don't actually download
@@ -50,9 +54,22 @@ class Archiver:
         self.config = config_manager
         self.logger = logger
         self.state = state_manager
+        self.status = status_tracker
         self.downloader = downloader
         self.skip_intro = skip_intro
         self.dry_run = dry_run
+        self.shutdown_requested = False
+
+        # Set up signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
+    def _signal_handler(self, signum, frame):
+        """Handle shutdown signals gracefully."""
+        self.logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+        self.shutdown_requested = True
+        # Raise KeyboardInterrupt to break out of blocking operations like yt_dlp download
+        raise KeyboardInterrupt("Graceful shutdown requested")
 
     def boot_sequence(self, audio_path: str) -> None:
         """
@@ -78,12 +95,14 @@ class Archiver:
 
         print("\nStarting automated archive client")
 
-    def download_from_url(self, url: str) -> tuple[int, int]:
+    def download_from_url(self, url: str, url_number: int = 1, total_urls: int = 1) -> tuple[int, int]:
         """
         Download all relevant media from URL.
 
         Args:
             url: SoundCloud URL to download from
+            url_number: Current URL number (for status reporting)
+            total_urls: Total number of URLs (for status reporting)
 
         Returns:
             Tuple of (attempted, downloaded) counts
@@ -91,20 +110,37 @@ class Archiver:
         attempted = 0
         downloaded = 0
 
+        # Update status
+        self.status.start_url_check(url, url_number, total_urls)
+
         try:
+            # Get download limits from config
+            initial_limit = self.config.get_initial_page_dl_limit()
+            archived_limit = self.config.get_archived_page_dl_limit()
+
+            # Determine which limit to use
+            last_checked = self.state.get_last_checked(url)
+            max_downloads = initial_limit if last_checked is None else archived_limit
+
             if self.dry_run:
                 self.logger.info(f"[DRY-RUN] Would download from: {url}")
                 info = self.downloader.extract_info(url)
                 if info and "entries" in info:
                     attempted = len(info["entries"])
                     self.logger.info(f"[DRY-RUN] {attempted} items available")
+                    self.status.update_download_progress(attempted=attempted)
             else:
-                success = self.downloader.download(url)
+                # Perform actual download with retries
+                success, reason = self.downloader.download(url, max_downloads=max_downloads if max_downloads > 0 else None)
+                
                 if success:
-                    attempted += 1
-                    downloaded += 1
+                    attempted = 1
+                    downloaded = 1
                 else:
+                    self.status.record_error(reason, url=url)
+                    self.logger.warning(f"Failed to download from {url}: {reason}")
                     self.state.record_error(url)
+                    self.status.complete_url(url, success=False)
                     return attempted, downloaded
 
             # Record successful check
@@ -114,13 +150,19 @@ class Archiver:
                 self.logger.debug(f"Successfully recorded check for {url}")
             except Exception as state_error:
                 self.logger.error(f"Failed to record state for {url}: {state_error}")
+                self.status.record_error(f"State recording failed: {state_error}", url=url)
+
+            self.status.complete_url(url, success=True)
 
         except Exception as e:
-            self.logger.error(f"Error occurred on page: {url}\n{traceback.format_exc()}")
+            error_msg = f"Error occurred on page: {url}\n{traceback.format_exc()}"
+            self.logger.error(error_msg)
+            self.status.record_error(str(e), url=url)
             try:
                 self.state.record_error(url)
             except:
                 pass
+            self.status.complete_url(url, success=False)
 
         return attempted, downloaded
 
@@ -135,11 +177,14 @@ class Archiver:
             self.logger.warning("No URLs configured in url_list.ini")
             return
 
+        # Filter out empty URLs
+        active_urls = [url for url in url_list if url.strip()]
+        total_urls = len(active_urls)
+
         # Print list of pages to user
         print("\nMonitoring the following pages:")
-        for url in url_list:
-            if url.strip():  # Only print non-empty lines
-                print(f" - {url}")
+        for url in active_urls:
+            print(f" - {url}")
 
         output_dir = self.config.get_output_dir()
         print(f"\n######\nARCHIVE OUTPUT DIRECTORY: {output_dir}/archive/%(playlist)s/")
@@ -150,15 +195,29 @@ class Archiver:
         total_attempted = 0
         total_downloaded = 0
 
-        # Process each URL
-        for url in url_list:
-            if not url.strip():
-                continue
+        # Initialize session tracking
+        self.status.start_session(total_urls)
 
-            print(f"\n######\n[URL] -- {url}\n")
-            attempted, downloaded = self.download_from_url(url)
-            total_attempted += attempted
-            total_downloaded += downloaded
+        try:
+            # Process each URL
+            for url_number, url in enumerate(active_urls, 1):
+                if self.shutdown_requested:
+                    self.logger.info("Shutdown requested, stopping archive pass")
+                    break
+
+                print(f"\n######\n[URL] -- {url}\n")
+                attempted, downloaded = self.download_from_url(url, url_number, total_urls)
+                total_attempted += attempted
+                total_downloaded += downloaded
+
+        except KeyboardInterrupt:
+            print("\n\nArchive pass interrupted by user")
+            self.logger.info("Archive pass interrupted by user (Ctrl+C)")
+        except Exception as e:
+            print(f"\nUnexpected error: {e}")
+            self.logger.error(f"Unexpected error during archive pass: {traceback.format_exc()}")
+        finally:
+            self.status.complete_session()
 
         print(f"\n######\nArchive pass completed.")
         self.logger.info(
@@ -176,11 +235,14 @@ class Archiver:
             self.logger.error("No URLs configured in url_list.ini")
             return
 
+        # Filter out empty URLs
+        active_urls = [url for url in url_list if url.strip()]
+        total_urls = len(active_urls)
+
         # Print list of pages to user
         print("\nMonitoring the following pages:")
-        for url in url_list:
-            if url.strip():
-                print(f" - {url}")
+        for url in active_urls:
+            print(f" - {url}")
 
         output_dir = self.config.get_output_dir()
         archive_wait_time = self.config.get_archive_freq()
@@ -191,13 +253,23 @@ class Archiver:
 
         try:
             while True:
-                # For every url in the url_list run archiving
-                for url in url_list:
-                    if not url.strip():
-                        continue
+                if self.shutdown_requested:
+                    break
 
-                    print(f"\n######\n[URL] -- {url}\n")
-                    self.download_from_url(url)
+                # Initialize session tracking
+                self.status.start_session(total_urls)
+
+                try:
+                    # For every url in the url_list run archiving
+                    for url_number, url in enumerate(active_urls, 1):
+                        if self.shutdown_requested:
+                            break
+
+                        print(f"\n######\n[URL] -- {url}\n")
+                        self.download_from_url(url, url_number, total_urls)
+
+                finally:
+                    self.status.complete_session()
 
                 print(
                     f"\n######\nArchive pass completed. Will check again in {archive_wait_time}s ({archive_wait_time/3600:.1f}h)"
