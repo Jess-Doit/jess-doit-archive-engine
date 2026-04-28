@@ -2,7 +2,7 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name="jdae",
-    version="0.4.0",
+    version="1.0.0",
     author="Jess Doit",
     author_email="doit.jesss@gmail.com",
     description="Jess Doit's Archive Engine",

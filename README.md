@@ -1,16 +1,15 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://black.readthedocs.io/en/stable/_static/license.svg)](https://github.com/Jess-Doit/jess-doit-archive-engine/blob/main/LICENSE)
 
-# Jess Doit's Archive Engine (v0.4.0)
+# Jess Doit's Archive Engine (v1.0.0)
 Automated tool to monitor your favorite SoundCloud pages. Ensure you never miss an upload with intelligent archiving, progress tracking, and smart retry logic.
 
-**Completely automated SoundCloud backup with enhanced UI, real-time progress tracking, and graceful error handling.**
+**Completely automated SoundCloud backup with colored terminal UI, real-time progress tracking, and graceful error handling.**
 
 <img src="https://github.com/Jess-Doit/jess-doit-resources/blob/main/jdae/boot.PNG?raw=true" alt="drawing" width="500"/>
 
 ## Features
 
-### v0.4.0 (Latest)
 - **Colored Terminal UI** - Beautiful colored output with cyan info, green success, red errors, yellow warnings
 - **Progress Bars** - Real-time progress indicators with tqdm for visual feedback during archive passes
 - **Interactive Setup Wizard** - `--setup` mode for first-time configuration with guided prompts
@@ -19,8 +18,6 @@ Automated tool to monitor your favorite SoundCloud pages. Ensure you never miss 
 - **Real-time Status Tracking** - JSON status file shows current operation and progress
 - **Graceful Shutdown** - Press Ctrl+C to cleanly exit with proper state cleanup
 - **Download Limits** - Intelligent limiting (initial page vs archived page limits) to save bandwidth
-
-### Core Features
 - **Modular Architecture** - Clean separation of concerns with dependency injection
 - **State Persistence** - Automatic tracking of downloaded files prevents re-downloads
 - **Structured Logging** - Detailed logs with timestamps to `~/.JDAE_OUTPUT/archive.log`
@@ -287,30 +284,6 @@ jdae/
 ```
 
 Each module has a single responsibility and receives dependencies via constructor (dependency injection).
-
-### Version History
-
-**v0.4.0 (April 2026)** - Polish & UI
-- Added colored terminal output
-- Implemented progress bars with tqdm
-- Created interactive config wizard
-- Added summary reports
-- Enhanced boot sequence
-
-**v0.3.0 (April 2026)** - Usability
-- Real-time status tracking
-- Smart download limits
-- Retry logic with exponential backoff
-- Graceful shutdown handling
-
-**v0.2.0 (April 2026)** - Foundation
-- Modular architecture
-- Structured logging
-- State persistence
-- CLI argument parsing
-- Dry-run mode
-
-**v0.1.0** - Original monolithic version
 
 ## Acknowledgments
 - Built on top of the amazing [yt_dlp](https://github.com/yt-dlp/yt-dlp) library
