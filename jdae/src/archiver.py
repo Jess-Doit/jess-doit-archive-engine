@@ -142,14 +142,19 @@ class Archiver:
                     self.status.update_download_progress(attempted=attempted)
             else:
                 # Perform actual download with retries
-                success, reason = self.downloader.download(url, max_downloads=max_downloads if max_downloads > 0 else None)
+                stats = self.downloader.download(url, max_downloads=max_downloads if max_downloads > 0 else None)
                 
-                if success:
-                    attempted = 1
-                    downloaded = 1
+                if stats["success"]:
+                    attempted = stats["items_attempted"]
+                    downloaded = stats["items_new"]
+                    skipped = stats["items_skipped"]
+                    
+                    # Update session tracking
+                    self.session_new_downloads += downloaded
+                    self.session_skipped += skipped
                 else:
-                    self.status.record_error(reason, url=url)
-                    self.logger.warning(f"Failed to download from {url}: {reason}")
+                    self.status.record_error(stats["reason"], url=url)
+                    self.logger.warning(f"Failed to download from {url}: {stats['reason']}")
                     self.state.record_error(url)
                     self.status.complete_url(url, success=False)
                     return attempted, downloaded
@@ -221,7 +226,7 @@ class Archiver:
                     total_attempted += attempted
                     total_downloaded += downloaded
                     self.session_urls_checked += 1
-                    self.session_new_downloads += downloaded
+                    # Note: session_new_downloads and session_skipped updated in download_from_url()
                     
                     pbar.update(1)
                     pbar.set_description(f"Downloaded: {self.session_new_downloads}")
@@ -295,7 +300,7 @@ class Archiver:
                             self.ui.print_url_start(url, url_number, total_urls)
                             attempted, downloaded = self.download_from_url(url, url_number, total_urls)
                             self.session_urls_checked += 1
-                            self.session_new_downloads += downloaded
+                            # Note: session_new_downloads and session_skipped updated in download_from_url()
                             
                             pbar.update(1)
                             pbar.set_description(f"Downloaded: {self.session_new_downloads}")
