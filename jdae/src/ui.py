@@ -47,7 +47,9 @@ class ArchiveUI:
 
     def _get_progress_message(self) -> str:
         """Get a progress message with variety."""
-        msg = self.PROGRESS_MESSAGES[self.progress_counter % len(self.PROGRESS_MESSAGES)]
+        msg = self.PROGRESS_MESSAGES[
+            self.progress_counter % len(self.PROGRESS_MESSAGES)
+        ]
         self.progress_counter += 1
         return msg
 
@@ -129,15 +131,23 @@ class ArchiveUI:
 
         print(f"{self.SUCCESS_COLOR}URLs Checked:{Style.RESET_ALL} {urls_checked}")
         print(f"{self.SUCCESS_COLOR}New Downloads:{Style.RESET_ALL} {new_downloads}")
-        print(f"{self.WARNING_COLOR}Skipped (Already Archived):{Style.RESET_ALL} {skipped}")
-        print(f"{self.WARNING_COLOR}Errors (with Retry):{Style.RESET_ALL} {errors_with_retry}")
-        print(f"{self.ERROR_COLOR}Permanently Skipped:{Style.RESET_ALL} {permanently_skipped}")
+        print(
+            f"{self.WARNING_COLOR}Skipped (Already Archived):{Style.RESET_ALL} {skipped}"
+        )
+        print(
+            f"{self.WARNING_COLOR}Errors (with Retry):{Style.RESET_ALL} {errors_with_retry}"
+        )
+        print(
+            f"{self.ERROR_COLOR}Permanently Skipped:{Style.RESET_ALL} {permanently_skipped}"
+        )
 
         minutes = elapsed_time / 60
         next_hours = next_check_in / 3600
         print()
         print(f"{self.DIM_COLOR}Time Elapsed:{Style.RESET_ALL} {minutes:.1f} minutes")
-        print(f"{self.INFO_COLOR}Next Check In:{Style.RESET_ALL} {next_hours:.1f} hours")
+        print(
+            f"{self.INFO_COLOR}Next Check In:{Style.RESET_ALL} {next_hours:.1f} hours"
+        )
 
     def print_download_preview(self, count: int, url: str) -> None:
         """Print dry-run preview of downloads."""
@@ -171,7 +181,9 @@ class ArchiveUI:
         """Print engine startup message."""
         if not skip_intro:
             print()
-            print(f"{self.SUCCESS_COLOR}Starting automated archive client{Style.RESET_ALL}")
+            print(
+                f"{self.SUCCESS_COLOR}Starting automated archive client{Style.RESET_ALL}"
+            )
         else:
             print(f"{self.SUCCESS_COLOR}Engine ready - good luck{Style.RESET_ALL}")
 

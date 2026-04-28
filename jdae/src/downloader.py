@@ -53,19 +53,19 @@ class YTDLLogger:
         """Extract and track download statistics from yt_dlp messages."""
         # Only track actual files (not playlist/item progress messages)
         # Files have extensions like .aac, .mp3, etc.
-        
+
         file_extensions = [".aac", ".mp3", ".wav", ".flac", ".m4a", ".ogg", ".opus"]
         has_file_ext = any(ext in msg for ext in file_extensions)
-        
+
         if not has_file_ext:
             return  # Not a file-related message, ignore
-        
+
         # Track files that are already downloaded (skipped)
         # Pattern: "/path/to/file.aac has already been downloaded"
         if "has already been downloaded" in msg:
             self.items_already_downloaded += 1
             self.items_attempted += 1
-        
+
         # Track newly downloaded files (file path without "already downloaded")
         # If we see a file path that doesn't say "already downloaded", it's a new download
         elif "/" in msg or "\\" in msg:
@@ -133,7 +133,9 @@ class ArchiveDownloader:
 
         return options
 
-    def download(self, url: str, max_downloads: Optional[int] = None, max_retries: int = 3) -> Dict[str, Any]:
+    def download(
+        self, url: str, max_downloads: Optional[int] = None, max_retries: int = 3
+    ) -> Dict[str, Any]:
         """
         Download content from URL with retry logic.
 
@@ -173,7 +175,9 @@ class ArchiveDownloader:
                 if max_downloads is not None and max_downloads > 0:
                     options["playlistend"] = max_downloads
 
-                self.logger.debug(f"Starting download from {url} (attempt {attempt + 1}/{max_retries})")
+                self.logger.debug(
+                    f"Starting download from {url} (attempt {attempt + 1}/{max_retries})"
+                )
                 self.logger.debug(f"Output template: {output_template}")
 
                 with yt_dlp.YoutubeDL(options) as ytdl:
@@ -184,8 +188,10 @@ class ArchiveDownloader:
                 items_skipped = ytdl_logger.items_already_downloaded
                 items_new = items_attempted - items_skipped
 
-                self.logger.info(f"Successfully completed download from {url} (attempted: {items_attempted}, new: {items_new}, skipped: {items_skipped})")
-                
+                self.logger.info(
+                    f"Successfully completed download from {url} (attempted: {items_attempted}, new: {items_new}, skipped: {items_skipped})"
+                )
+
                 return {
                     "success": True,
                     "reason": "Success",
@@ -196,8 +202,10 @@ class ArchiveDownloader:
 
             except yt_dlp.utils.DownloadError as e:
                 error_msg = str(e)
-                self.logger.warning(f"Download error for {url} (attempt {attempt + 1}/{max_retries}): {error_msg}")
-                
+                self.logger.warning(
+                    f"Download error for {url} (attempt {attempt + 1}/{max_retries}): {error_msg}"
+                )
+
                 # Don't retry certain errors (invalid URL, not found, etc)
                 if "not found" in error_msg.lower() or "invalid" in error_msg.lower():
                     self.logger.error(f"Permanent error, not retrying: {error_msg}")
@@ -208,12 +216,14 @@ class ArchiveDownloader:
                         "items_skipped": 0,
                         "items_new": 0,
                     }
-                
+
                 last_error = error_msg
 
             except Exception as e:
                 error_msg = str(e)
-                self.logger.warning(f"Unexpected error downloading from {url} (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                self.logger.warning(
+                    f"Unexpected error downloading from {url} (attempt {attempt + 1}/{max_retries}): {error_msg}"
+                )
                 last_error = error_msg
 
             # If not the last attempt, wait before retrying
@@ -223,7 +233,9 @@ class ArchiveDownloader:
                 time.sleep(wait_time)
 
         # All retries exhausted
-        self.logger.error(f"Failed to download from {url} after {max_retries} attempts: {last_error}")
+        self.logger.error(
+            f"Failed to download from {url} after {max_retries} attempts: {last_error}"
+        )
         return {
             "success": False,
             "reason": f"Failed after {max_retries} attempts: {last_error}",
@@ -245,7 +257,9 @@ class ArchiveDownloader:
         try:
             self.logger.debug(f"Extracting info from {url}")
 
-            output_template = f"{self.output_dir}/archive/%(playlist)s/{self.OUTPUT_FILE_TEMPLATE}"
+            output_template = (
+                f"{self.output_dir}/archive/%(playlist)s/{self.OUTPUT_FILE_TEMPLATE}"
+            )
             options = self._get_ytdl_options(output_template)
 
             with yt_dlp.YoutubeDL(options) as ytdl:

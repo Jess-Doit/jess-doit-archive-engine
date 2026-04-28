@@ -99,9 +99,7 @@ class ConfigManager(object):
                 missing_keys.append(key)
 
         if missing_keys:
-            raise KeyError(
-                f"Missing required config keys: {', '.join(missing_keys)}"
-            )
+            raise KeyError(f"Missing required config keys: {', '.join(missing_keys)}")
 
     def get_url_list(self):
         """

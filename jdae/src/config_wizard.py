@@ -130,7 +130,9 @@ class ConfigWizard:
 
     def _prompt_first_url(self) -> None:
         """Prompt for first URL to archive."""
-        self.ui.print_info("Enter a SoundCloud URL to start archiving (or press Enter to skip)")
+        self.ui.print_info(
+            "Enter a SoundCloud URL to start archiving (or press Enter to skip)"
+        )
         url = input("SoundCloud URL: ").strip()
 
         self.config["first_url"] = url if url else None
@@ -145,7 +147,9 @@ class ConfigWizard:
         self.ui.print_section("Configuration Summary")
 
         print(f"Output Directory: {self.config['output_dir']}")
-        print(f"Archive Frequency: {self.config['archive_freq_seconds'] // 3600} hour(s)")
+        print(
+            f"Archive Frequency: {self.config['archive_freq_seconds'] // 3600} hour(s)"
+        )
         print(f"HQ Downloads: {'Enabled' if self.config['hq_enabled'] else 'Disabled'}")
         if self.config.get("first_url"):
             print(f"First URL: {self.config['first_url']}")

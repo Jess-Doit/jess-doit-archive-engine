@@ -26,7 +26,9 @@ def main():
     if args.get("setup"):
         ui = get_ui()
         if run_setup_wizard():
-            ui.print_success("Setup complete! Run 'python start_jdae.py' to start archiving")
+            ui.print_success(
+                "Setup complete! Run 'python start_jdae.py' to start archiving"
+            )
         return
 
     try:
@@ -38,10 +40,18 @@ def main():
 
         # Merge config and CLI options (CLI takes precedence)
         # For debug_mode: CLI --debug flag overrides config value
-        debug_mode = args.get("debug") if args.get("debug") is not None else config.get_debug_mode()
-        
+        debug_mode = (
+            args.get("debug")
+            if args.get("debug") is not None
+            else config.get_debug_mode()
+        )
+
         # For run_once: CLI --once flag overrides config value
-        run_once = args.get("run_once") if args.get("run_once") is not None else config.get_run_once_mode()
+        run_once = (
+            args.get("run_once")
+            if args.get("run_once") is not None
+            else config.get_run_once_mode()
+        )
 
         # Get configuration values
         output_dir = config.get_output_dir()

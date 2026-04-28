@@ -65,7 +65,7 @@ class Archiver:
         self.skip_intro = skip_intro
         self.dry_run = dry_run
         self.shutdown_requested = False
-        
+
         # Session tracking for summary reports
         self.session_start_time = None
         self.session_urls_checked = 0
@@ -108,7 +108,9 @@ class Archiver:
 
         self.ui.print_starting_engine(skip_intro=False)
 
-    def download_from_url(self, url: str, url_number: int = 1, total_urls: int = 1) -> tuple[int, int]:
+    def download_from_url(
+        self, url: str, url_number: int = 1, total_urls: int = 1
+    ) -> tuple[int, int]:
         """
         Download all relevant media from URL.
 
@@ -144,19 +146,23 @@ class Archiver:
                     self.status.update_download_progress(attempted=attempted)
             else:
                 # Perform actual download with retries
-                stats = self.downloader.download(url, max_downloads=max_downloads if max_downloads > 0 else None)
-                
+                stats = self.downloader.download(
+                    url, max_downloads=max_downloads if max_downloads > 0 else None
+                )
+
                 if stats["success"]:
                     attempted = stats["items_attempted"]
                     downloaded = stats["items_new"]
                     skipped = stats["items_skipped"]
-                    
+
                     # Update session tracking
                     self.session_new_downloads += downloaded
                     self.session_skipped += skipped
                 else:
                     self.status.record_error(stats["reason"], url=url)
-                    self.logger.warning(f"Failed to download from {url}: {stats['reason']}")
+                    self.logger.warning(
+                        f"Failed to download from {url}: {stats['reason']}"
+                    )
                     self.state.record_error(url)
                     self.status.complete_url(url, success=False)
                     return attempted, downloaded
@@ -168,7 +174,9 @@ class Archiver:
                 self.logger.debug(f"Successfully recorded check for {url}")
             except Exception as state_error:
                 self.logger.error(f"Failed to record state for {url}: {state_error}")
-                self.status.record_error(f"State recording failed: {state_error}", url=url)
+                self.status.record_error(
+                    f"State recording failed: {state_error}", url=url
+                )
 
             self.status.complete_url(url, success=True)
 
@@ -217,19 +225,23 @@ class Archiver:
 
         try:
             # Process each URL with progress bar
-            with tqdm(total=total_urls, desc="Archive Pass Progress", unit="URL") as pbar:
+            with tqdm(
+                total=total_urls, desc="Archive Pass Progress", unit="URL"
+            ) as pbar:
                 for url_number, url in enumerate(active_urls, 1):
                     if self.shutdown_requested:
                         self.logger.info("Shutdown requested, stopping archive pass")
                         break
 
                     self.ui.print_url_start(url, url_number, total_urls)
-                    attempted, downloaded = self.download_from_url(url, url_number, total_urls)
+                    attempted, downloaded = self.download_from_url(
+                        url, url_number, total_urls
+                    )
                     total_attempted += attempted
                     total_downloaded += downloaded
                     self.session_urls_checked += 1
                     # Note: session_new_downloads and session_skipped updated in download_from_url()
-                    
+
                     pbar.update(1)
                     pbar.set_description(f"Downloaded: {self.session_new_downloads}")
 
@@ -238,12 +250,16 @@ class Archiver:
             self.logger.info("Archive pass interrupted by user (Ctrl+C)")
         except Exception as e:
             self.ui.print_error(f"Unexpected error: {e}")
-            self.logger.error(f"Unexpected error during archive pass: {traceback.format_exc()}")
+            self.logger.error(
+                f"Unexpected error during archive pass: {traceback.format_exc()}"
+            )
         finally:
             self.status.complete_session()
-            
+
             # Print summary report
-            elapsed_time = time.time() - self.session_start_time if self.session_start_time else 0
+            elapsed_time = (
+                time.time() - self.session_start_time if self.session_start_time else 0
+            )
             self.ui.print_summary_report(
                 urls_checked=self.session_urls_checked,
                 new_downloads=self.session_new_downloads,
@@ -251,7 +267,7 @@ class Archiver:
                 errors_with_retry=self.session_errors,
                 permanently_skipped=self.session_permanently_skipped,
                 elapsed_time=elapsed_time,
-                next_check_in=0  # Last pass, no next check
+                next_check_in=0,  # Last pass, no next check
             )
 
     def run_continuous(self) -> None:
@@ -294,22 +310,28 @@ class Archiver:
 
                 try:
                     # For every url in the url_list run archiving with progress bar
-                    with tqdm(total=total_urls, desc="Archive Pass Progress", unit="URL") as pbar:
+                    with tqdm(
+                        total=total_urls, desc="Archive Pass Progress", unit="URL"
+                    ) as pbar:
                         for url_number, url in enumerate(active_urls, 1):
                             if self.shutdown_requested:
                                 break
 
                             self.ui.print_url_start(url, url_number, total_urls)
-                            attempted, downloaded = self.download_from_url(url, url_number, total_urls)
+                            attempted, downloaded = self.download_from_url(
+                                url, url_number, total_urls
+                            )
                             self.session_urls_checked += 1
                             # Note: session_new_downloads and session_skipped updated in download_from_url()
-                            
+
                             pbar.update(1)
-                            pbar.set_description(f"Downloaded: {self.session_new_downloads}")
+                            pbar.set_description(
+                                f"Downloaded: {self.session_new_downloads}"
+                            )
 
                 finally:
                     self.status.complete_session()
-                    
+
                     # Print summary report
                     elapsed_time = time.time() - self.session_start_time
                     self.ui.print_summary_report(
@@ -319,7 +341,7 @@ class Archiver:
                         errors_with_retry=self.session_errors,
                         permanently_skipped=self.session_permanently_skipped,
                         elapsed_time=elapsed_time,
-                        next_check_in=archive_wait_time
+                        next_check_in=archive_wait_time,
                     )
 
                 self.ui.print_waiting_message(archive_wait_time)
@@ -335,7 +357,9 @@ class Archiver:
             self.logger.info("Archive engine stopped by user (Ctrl+C)")
         except Exception as e:
             self.ui.print_error(f"Unexpected error: {e}")
-            self.logger.error(f"Unexpected error in main loop: {traceback.format_exc()}")
+            self.logger.error(
+                f"Unexpected error in main loop: {traceback.format_exc()}"
+            )
 
     def run(self, run_once: bool = False) -> None:
         """
